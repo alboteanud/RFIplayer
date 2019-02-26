@@ -1,5 +1,9 @@
 <resources>
-    <string name="app_name">RFI</string>
+    <string name="app_name">Player</string>
     <string name="notif_title">RFI</string>
-    <string name="notif_content">RFI</string>
+    <string name="notif_channel_name">My notification channel</string>
+    <string name="url_48">http://asculta.rfi.ro:9128/live.aac</string>
+    <string name="url_128">http://asculta.rfi.ro:9128/live.mp3</string>
+    <string name="key_pref_low_mode">key_pref_low_mode</string>
+    <string name="norif_channel_id">com.craiovadata.rfiplayer.notification.CHANNEL_ID</string>
 </resources>

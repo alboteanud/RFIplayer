@@ -18,77 +18,85 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 
-
-private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
+private const val ACTION_PLAY_HIGH = "com.craiovadata.rfiplayer.action.PLAY_HIGH"
 private const val ACTION_PLAY_LOW = "com.craiovadata.rfiplayer.action.PLAY_LOW"
+private const val ACTION_TOGGLE_STATE = "com.craiovadata.rfiplayer.action.TOGGLE_STATE"
 private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
-private const val EXTRA_URL = "com.craiovadata.rfiplayer.extra.URL"
-private const val PREF_LOW_Q_KEY = "low_pref"
 
 class MyService : Service() {
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    private var player: SimpleExoPlayer? = null
 
-        when (intent?.action) {
-            ACTION_PLAY -> {
-                handleActionPlay()
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val action = intent?.action
+
+        when (action) {
+            ACTION_PLAY_HIGH -> {
+                handleActionPlay(false)
+                savePlayMode(false)
             }
             ACTION_PLAY_LOW -> {
-                handleActionPlayLow()
+                handleActionPlay(true)
+                savePlayMode(true)
             }
             ACTION_STOP -> {
                 handleActionStop()
             }
+            ACTION_TOGGLE_STATE -> {
+                handleActionToggleState()
+            }
+            null -> { // restart after service kill
+                handleActionPlay(null)
+            }
         }
 
-
-        return super.onStartCommand(intent, flags, startId)
+        return START_STICKY
     }
 
-    override fun onBind(intent: Intent): IBinder {
-        TODO("Return the communication channel to the service.")
-    }
+    private fun handleActionPlay(shouldPlayLow: Boolean?) {
+        val startLowPlay = shouldPlayLow ?: getSavedPlayMode()
 
-    private fun handleActionPlay() {
-        initializePlayer(url_128)
-        createAndShowForegroundNotification("128 kbps")
-        getSharedPreferences("_", Context.MODE_PRIVATE).edit().putBoolean(PREF_LOW_Q_KEY, false).apply()
-    }
-
-    private fun handleActionPlayLow() {
-        initializePlayer(url_48)
-        createAndShowForegroundNotification("48 kbps")
-        getSharedPreferences("_", Context.MODE_PRIVATE).edit().putBoolean(PREF_LOW_Q_KEY, true).apply()
+        if (startLowPlay) {
+            initializePlayer(getString(R.string.url_48))
+            showNotification("48 kbps")
+        } else {
+            initializePlayer(getString(R.string.url_128))
+            showNotification("128 kbps")
+        }
     }
 
     private fun handleActionStop() {
         releasePlayer()
+        showNotification("")
+        stopForeground(STOP_FOREGROUND_DETACH)
+        stopSelf()
     }
 
-    private var player: SimpleExoPlayer? = null
+    private fun handleActionToggleState() {
+        if (player == null) {
+            handleActionPlay(null)
+        } else {
+            handleActionStop()
+        }
+    }
 
     private fun initializePlayer(url: String) {
-//        if (player != null) return
-
-        releasePlayer()
-
-        player = ExoPlayerFactory.newSimpleInstance(
-            DefaultRenderersFactory(this),
-            DefaultTrackSelector(),
-            DefaultLoadControl()
-        )
-        player?.setPlayWhenReady(true)
+        if (player == null) {
+            player = ExoPlayerFactory.newSimpleInstance(
+                DefaultRenderersFactory(this),
+                DefaultTrackSelector(),
+                DefaultLoadControl()
+            )
+            player?.setPlayWhenReady(true)
+        }
 
         val mediaSource = buildMediaSource(Uri.parse(url))
         player?.prepare(mediaSource)
     }
 
     private fun releasePlayer() {
-        if (player == null) return
-
         player?.release()
         player = null
-
     }
 
     private fun buildMediaSource(uri: Uri): MediaSource {
@@ -97,56 +105,30 @@ class MyService : Service() {
         ).createMediaSource(uri)
     }
 
+    private fun showNotification(txt: String) {
 
-    private fun createAndShowForegroundNotification(notifTxt: String) {
+        val largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_rfi)
+        val chanel_id = getString(R.string.norif_channel_id)
 
-        val intentDetailsActivity = Intent(this, MainActivity::class.java)
-//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-
-        val pendingIntentOpenActivity: PendingIntent? = TaskStackBuilder.create(this)
-            // add all of DetailsActivity's parents to the stack,
-            .addNextIntentWithParentStack(intentDetailsActivity)
-            .getPendingIntent(0, PendingIntent.FLAG_ONE_SHOT)
-
-        val intentPlay = Intent(this, MyService::class.java).apply {
-            action = ACTION_PLAY
-        }
-        val intentPlayLow = Intent(this, MyService::class.java).apply {
-            action = ACTION_PLAY_LOW
-        }
-
-        val intentStop = Intent(this, MyService::class.java).apply {
-            action = ACTION_STOP
-        }
-
-        val pendingIntentPlay: PendingIntent? = PendingIntent.getService(
-            this, 0, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val pendingIntentPlayLow: PendingIntent? = PendingIntent.getService(
-            this, 0, intentPlayLow, PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        val pendingIntentStop: PendingIntent? = PendingIntent.getService(
-            this, 0, intentStop, PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val builder = NotificationCompat.Builder(this, channelId)
-            .setOngoing(true)
-            .setSmallIcon(R.drawable.ic_stat_name)
-            .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.logo_rfi))
-//            .setContentTitle(getString(R.string.app_name))
-//            .setContentTitle(notifTxt)
-            .setContentText(notifTxt)
-            .setContentIntent(pendingIntentOpenActivity)
-            .addAction(android.R.drawable.ic_media_pause, "STOP", pendingIntentStop)
-            .addAction(android.R.drawable.ic_media_play, "PLAY", pendingIntentPlay)
-            .addAction(android.R.drawable.ic_media_play, "LOW", pendingIntentPlayLow)
+        val builder = NotificationCompat.Builder(this, chanel_id)
+            .setSmallIcon(R.drawable.ic_notif)
+            .setLargeIcon(largeIcon)
+//            .setContentTitle(getString(R.string.notif_title))
+            .setContentText(txt)
+            .setColor(getColor(R.color.colorPrimary))
+//            .setAutoCancel(true)
+//            .setOngoing(true)
+            .setContentIntent(getPendingIntentToActivity())
+            .addAction(android.R.drawable.ic_media_play, "PLAY L", getPendingIntentToService(ACTION_PLAY_LOW))
+            .addAction(android.R.drawable.ic_media_play, "PLAY H", getPendingIntentToService(ACTION_PLAY_HIGH))
+            .addAction(android.R.drawable.ic_media_pause, "STOP", getPendingIntentToService(ACTION_STOP))
 
         val notificationManager = getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
-                "Channel human readable title",
+                chanel_id,
+                getString(R.string.notif_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             )
             notificationManager.createNotificationChannel(channel)
@@ -156,20 +138,51 @@ class MyService : Service() {
         startForeground(1, notification)
     }
 
+    private fun savePlayMode(isLowMode: Boolean) {
+        val key = getString(R.string.key_pref_low_mode)
+        val editor = getSharedPreferences("_", Context.MODE_PRIVATE).edit()
+        editor.putBoolean(key, isLowMode).apply()
+    }
+
+    private fun getSavedPlayMode(): Boolean {
+        val pref = getSharedPreferences("_", Context.MODE_PRIVATE)
+        val key = getString(R.string.key_pref_low_mode)
+        return pref.getBoolean(key, true)
+    }
+
+    private fun getPendingIntentToService(action_name: String): PendingIntent {
+        val intent = Intent(this, MyService::class.java)
+        intent.action = action_name
+
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+    private fun getPendingIntentToActivity(): PendingIntent? {
+        val intentToActivity = Intent(this, MainActivity::class.java)
+
+        val pendingIntentToActivity: PendingIntent? = TaskStackBuilder.create(this)
+            .addNextIntentWithParentStack(intentToActivity)
+            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        return pendingIntentToActivity
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        releasePlayer()
+    }
+
+    override fun onBind(intent: Intent): IBinder {
+        TODO("Return the communication channel to the service.")
+    }
 
     companion object {
 
         @JvmStatic
-        fun startActionPlay(context: Context) {
-            val intent = Intent(context, MyService::class.java).apply {
-                val isLowPlay = context.getSharedPreferences("_", Context.MODE_PRIVATE).getBoolean(PREF_LOW_Q_KEY, true)
-                if (isLowPlay)
-                    action = ACTION_PLAY_LOW
-                else
-                    action = ACTION_PLAY
-            }
+        fun toggleState(context: Context) {
+            val intent = Intent(context, MyService::class.java)
+            intent.action = ACTION_TOGGLE_STATE
 
-            //Start service:
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
             } else {
@@ -177,21 +190,6 @@ class MyService : Service() {
             }
         }
 
-        @JvmStatic
-        fun startActionStop(context: Context) {
-            val intent = Intent(context, MyService::class.java).apply {
-                action = ACTION_STOP
-            }
-            context.startService(intent)
-        }
-
-        val TAG = "MyService"
-        val channelId = "com.craiovadata.rfiplayer.notification.CHANNEL_ID_FOREGROUND"
-
-        private val url_48 = "http://asculta.rfi.ro:9128/live.aac"
-        private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
-
     }
-
 
 }
