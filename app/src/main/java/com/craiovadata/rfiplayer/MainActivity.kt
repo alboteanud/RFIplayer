@@ -1,46 +1,56 @@
 package com.craiovadata.rfiplayer
 
 import android.os.Bundle
-import android.view.View
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import com.craiovadata.rfiplayer.MyService.Companion.getSavedPlayMode
+import com.craiovadata.rfiplayer.MyService.Companion.savePlayMode
+import com.craiovadata.rfiplayer.MyService.Companion.startActionPlay
+import com.craiovadata.rfiplayer.MyService.Companion.startActionTogglePlay
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
-
-
-    var isLowPlayMode = false
+class MainActivity : AppCompatActivity() {
+    var menuItemChangeMode: MenuItem? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
-        isLowPlayMode = MyService.getSavedPlayMode(this)
-        updateUI()
-    }
-
-    override fun onClick(v: View?) {
-        when (v) {
-            fab -> {
-                MyService.startActionTogglePlay(this)
-            }
-            button_toggle_play_mode -> {
-                isLowPlayMode = !isLowPlayMode
-                MyService.savePlayMode(this, isLowPlayMode)
-                MyService.startActionPlay(this)
-                updateUI()
-            }
+        fab.setOnClickListener {
+            startActionTogglePlay(this)
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        menuItemChangeMode = menu?.findItem(R.id.menu_play_mode)
+        val lowModePlay = getSavedPlayMode(this)
+        updateUI(lowModePlay)
+        return super.onCreateOptionsMenu(menu)
+    }
 
-    fun updateUI() {
-        if (isLowPlayMode) {
-            button_toggle_play_mode.text = "48 kbps"
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.menu_play_mode -> {
+                var lowModePlay = getSavedPlayMode(this)
+                lowModePlay = !lowModePlay
+                savePlayMode(this, lowModePlay)
+                startActionPlay(this)
+                updateUI(lowModePlay)
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun updateUI(lowModePlay: Boolean) {
+        val txt: String
+        if (lowModePlay) {
+            txt = getString(R.string.text_48_kbps)
         } else {
-            button_toggle_play_mode.text = "128 kbps"
+            txt = getString(R.string.text_128_kbps)
         }
+        menuItemChangeMode?.title = txt
     }
 
 }

@@ -28,10 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            app:fabCustomSize="160dp"
-            android:onClick="onClick"
-    />
-    <!--app:srcCompat="@android:drawable/ic_media_play"/>-->
-
+            app:fabCustomSize="128dp"
+            app:srcCompat="@drawable/ic_notif"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

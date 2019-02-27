@@ -45,10 +45,10 @@ class MyService : Service() {
 
         if (startLowPlay) {
             initializePlayer(getString(R.string.url_48))
-            showNotification("48 kbps")
+            showNotification(getString(R.string.text_48_kbps))
         } else {
             initializePlayer(getString(R.string.url_128))
-            showNotification("128 kbps")
+            showNotification(getString(R.string.text_128_kbps))
         }
     }
 
@@ -102,8 +102,16 @@ class MyService : Service() {
 //            .setAutoCancel(true)
 //            .setOngoing(true)
             .setContentIntent(getPendingIntentToActivity())
-            .addAction(android.R.drawable.ic_media_play, "PLAY", getPendingIntentToService(ACTION_PLAY))
-            .addAction(android.R.drawable.ic_media_pause, "STOP", getPendingIntentToService(ACTION_STOP))
+            .addAction(
+                android.R.drawable.ic_media_play,
+                getString(R.string.notif_action_play),
+                getPendingIntentToService(ACTION_PLAY)
+            )
+            .addAction(
+                android.R.drawable.ic_media_pause,
+                getString(R.string.notif_action_stop),
+                getPendingIntentToService(ACTION_STOP)
+            )
 
         val notificationManager = getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -161,21 +169,21 @@ class MyService : Service() {
         }
 
         @JvmStatic
-        fun savePlayMode(context:Context, isLowMode: Boolean) {
+        fun savePlayMode(context: Context, isLowMode: Boolean) {
             val key = context.getString(R.string.key_pref_low_mode)
             val editor = context.getSharedPreferences("_", Context.MODE_PRIVATE).edit()
             editor.putBoolean(key, isLowMode).apply()
         }
 
         @JvmStatic
-        fun getSavedPlayMode(context:Context): Boolean {
+        fun getSavedPlayMode(context: Context): Boolean {
             val pref = context.getSharedPreferences("_", Context.MODE_PRIVATE)
             val key = context.getString(R.string.key_pref_low_mode)
             return pref.getBoolean(key, true)
         }
 
         @JvmStatic
-        fun startActionPlay(context: Context){
+        fun startActionPlay(context: Context) {
 
             val intent = Intent(context, MyService::class.java)
             intent.action = ACTION_PLAY
@@ -185,9 +193,6 @@ class MyService : Service() {
             } else {
                 context.startService(intent)
             }
-
-
-
 
         }
 
