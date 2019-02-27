@@ -14,8 +14,7 @@ import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 
-private const val ACTION_PLAY_HIGH = "com.craiovadata.rfiplayer.action.PLAY_HIGH"
-private const val ACTION_PLAY_LOW = "com.craiovadata.rfiplayer.action.PLAY_LOW"
+private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
 private const val ACTION_TOGGLE_STATE = "com.craiovadata.rfiplayer.action.TOGGLE_STATE"
 private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
 
@@ -27,13 +26,8 @@ class MyService : Service() {
         val action = intent?.action
 
         when (action) {
-            ACTION_PLAY_HIGH -> {
-                handleActionPlay(false)
-                savePlayMode(false)
-            }
-            ACTION_PLAY_LOW -> {
-                handleActionPlay(true)
-                savePlayMode(true)
+            ACTION_PLAY, null -> {
+                handleActionPlay()
             }
             ACTION_STOP -> {
                 handleActionStop()
@@ -41,16 +35,13 @@ class MyService : Service() {
             ACTION_TOGGLE_STATE -> {
                 handleActionToggleState()
             }
-            null -> { // restart after service kill
-                handleActionPlay(null)
-            }
         }
 
         return START_STICKY
     }
 
-    private fun handleActionPlay(shouldPlayLow: Boolean?) {
-        val startLowPlay = shouldPlayLow ?: getSavedPlayMode()
+    private fun handleActionPlay() {
+        val startLowPlay = getSavedPlayMode(this)
 
         if (startLowPlay) {
             initializePlayer(getString(R.string.url_48))
@@ -70,7 +61,7 @@ class MyService : Service() {
 
     private fun handleActionToggleState() {
         if (player == null) {
-            handleActionPlay(null)
+            handleActionPlay()
         } else {
             handleActionStop()
         }
@@ -79,12 +70,6 @@ class MyService : Service() {
     private fun initializePlayer(url: String) {
         if (player == null) {
             player = ExoPlayerFactory.newSimpleInstance(this)
-//            player = ExoPlayerFactory.newSimpleInstance(  // for exoplayer 2.7.3
-//                DefaultRenderersFactory(this),
-//                DefaultTrackSelector(),
-//                DefaultLoadControl()
-//            )
-
             player?.setPlayWhenReady(true)
         }
 
@@ -111,14 +96,13 @@ class MyService : Service() {
         val builder = NotificationCompat.Builder(this, chanel_id)
             .setSmallIcon(R.drawable.ic_notif)
 //            .setLargeIcon(largeIcon)
-//            .setContentTitle(getString(R.string.notif_title))
+            .setContentTitle(getString(R.string.notif_title))
             .setContentText(txt)
             .setColor(getColor(R.color.colorPrimary))
 //            .setAutoCancel(true)
 //            .setOngoing(true)
             .setContentIntent(getPendingIntentToActivity())
-            .addAction(android.R.drawable.ic_media_play, "PLAY L", getPendingIntentToService(ACTION_PLAY_LOW))
-            .addAction(android.R.drawable.ic_media_play, "PLAY H", getPendingIntentToService(ACTION_PLAY_HIGH))
+            .addAction(android.R.drawable.ic_media_play, "PLAY", getPendingIntentToService(ACTION_PLAY))
             .addAction(android.R.drawable.ic_media_pause, "STOP", getPendingIntentToService(ACTION_STOP))
 
         val notificationManager = getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
@@ -134,18 +118,6 @@ class MyService : Service() {
 
         val notification = builder.build()
         startForeground(1, notification)
-    }
-
-    private fun savePlayMode(isLowMode: Boolean) {
-        val key = getString(R.string.key_pref_low_mode)
-        val editor = getSharedPreferences("_", Context.MODE_PRIVATE).edit()
-        editor.putBoolean(key, isLowMode).apply()
-    }
-
-    private fun getSavedPlayMode(): Boolean {
-        val pref = getSharedPreferences("_", Context.MODE_PRIVATE)
-        val key = getString(R.string.key_pref_low_mode)
-        return pref.getBoolean(key, true)
     }
 
     private fun getPendingIntentToService(action_name: String): PendingIntent {
@@ -177,7 +149,7 @@ class MyService : Service() {
     companion object {
 
         @JvmStatic
-        fun toggleState(context: Context) {
+        fun startActionTogglePlay(context: Context) {
             val intent = Intent(context, MyService::class.java)
             intent.action = ACTION_TOGGLE_STATE
 
@@ -186,6 +158,37 @@ class MyService : Service() {
             } else {
                 context.startService(intent)
             }
+        }
+
+        @JvmStatic
+        fun savePlayMode(context:Context, isLowMode: Boolean) {
+            val key = context.getString(R.string.key_pref_low_mode)
+            val editor = context.getSharedPreferences("_", Context.MODE_PRIVATE).edit()
+            editor.putBoolean(key, isLowMode).apply()
+        }
+
+        @JvmStatic
+        fun getSavedPlayMode(context:Context): Boolean {
+            val pref = context.getSharedPreferences("_", Context.MODE_PRIVATE)
+            val key = context.getString(R.string.key_pref_low_mode)
+            return pref.getBoolean(key, true)
+        }
+
+        @JvmStatic
+        fun startActionPlay(context: Context){
+
+            val intent = Intent(context, MyService::class.java)
+            intent.action = ACTION_PLAY
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+
+
+
+
         }
 
     }
