@@ -3,19 +3,15 @@ package com.craiovadata.rfiplayer
 import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.TaskStackBuilder
-import com.google.android.exoplayer2.DefaultLoadControl
-import com.google.android.exoplayer2.DefaultRenderersFactory
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 
 private const val ACTION_PLAY_HIGH = "com.craiovadata.rfiplayer.action.PLAY_HIGH"
@@ -82,11 +78,13 @@ class MyService : Service() {
 
     private fun initializePlayer(url: String) {
         if (player == null) {
-            player = ExoPlayerFactory.newSimpleInstance(
-                DefaultRenderersFactory(this),
-                DefaultTrackSelector(),
-                DefaultLoadControl()
-            )
+            player = ExoPlayerFactory.newSimpleInstance(this)
+//            player = ExoPlayerFactory.newSimpleInstance(  // for exoplayer 2.7.3
+//                DefaultRenderersFactory(this),
+//                DefaultTrackSelector(),
+//                DefaultLoadControl()
+//            )
+
             player?.setPlayWhenReady(true)
         }
 
@@ -107,12 +105,12 @@ class MyService : Service() {
 
     private fun showNotification(txt: String) {
 
-        val largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_rfi)
+//        val largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_rfi)
         val chanel_id = getString(R.string.norif_channel_id)
 
         val builder = NotificationCompat.Builder(this, chanel_id)
             .setSmallIcon(R.drawable.ic_notif)
-            .setLargeIcon(largeIcon)
+//            .setLargeIcon(largeIcon)
 //            .setContentTitle(getString(R.string.notif_title))
             .setContentText(txt)
             .setColor(getColor(R.color.colorPrimary))
