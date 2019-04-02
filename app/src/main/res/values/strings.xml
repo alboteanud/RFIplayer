@@ -10,4 +10,5 @@
     <string name="text_128_kbps">128 kbps</string>
     <string name="notif_action_play">Play</string>
     <string name="notif_action_stop">Stop</string>
+    <string name="widget_logo">RFI</string>
 </resources>
