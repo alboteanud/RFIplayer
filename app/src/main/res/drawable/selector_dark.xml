@@ -6,5 +6,5 @@
     <item android:drawable="@drawable/abc_list_selector_holo_light" android:state_selected="true" />
     <item android:drawable="@drawable/abc_list_selector_holo_light" android:state_focused="true" />
 
-    <item android:drawable="@color/colorPrimaryDark" /> <!-- default -->
+    <item android:drawable="@color/graySemi" /> <!-- default -->
 </selector>
