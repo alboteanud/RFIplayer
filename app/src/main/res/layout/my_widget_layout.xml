@@ -5,12 +5,12 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:background="@color/colorPrimary">
+>
 
     <FrameLayout android:layout_width="match_parent"
                  android:layout_height="0dp"
-                 android:background="@drawable/selector"
-                 android:layout_weight="2"
+                 android:background="@drawable/selector_primary_color"
+                 android:layout_weight="1"
                  android:id="@+id/widgetView">
 
         <TextView
@@ -25,8 +25,8 @@
 
     <FrameLayout android:layout_width="match_parent"
                  android:layout_height="0dp"
-                 android:layout_weight="3"
-                 android:background="@drawable/selector_dark"
+                 android:layout_weight="2"
+                 android:background="@drawable/selector_holo_color"
                  android:id="@+id/widgetButton">
 
         <ImageView android:layout_width="wrap_content"
