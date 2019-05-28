@@ -22,7 +22,7 @@ class MyAppWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.my_widget_layout)
             views.setOnClickPendingIntent(R.id.widgetView, pendingIntent)
 
-            val pendingIntentStartService = MyService.buildPendingIntentToggle(context)
+            val pendingIntentStartService = MyService.getPendingIntentTogglePlayerState(context)
             views.setOnClickPendingIntent(R.id.widgetButton, pendingIntentStartService)
 //            views.setTextViewText(R.id.widgetTextViewTemperature, tempTxt)
 

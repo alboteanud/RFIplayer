@@ -21,31 +21,28 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
 private const val ACTION_TOGGLE_PLAYER = "com.craiovadata.rfiplayer.action.TOGGLE"
 private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
-private const val EXTRA_HIGH_QUALITY_PLAY = "com.craiovadata.rfiplayer.extra.HQ"
 
 class MyService : Service() {
 
     private var player: SimpleExoPlayer? = null
-    private var playHQ: Boolean = false
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.action
         when (action) {
             ACTION_PLAY, null -> {
-                playHQ = intent?.getBooleanExtra(EXTRA_HIGH_QUALITY_PLAY, false) ?: false
                 handleActionPlay()
             }
             ACTION_STOP -> {
                 handleActionStop()
             }
             ACTION_TOGGLE_PLAYER -> {
-                handleActionToggle()
+                handleActionTogglePlayerState()
             }
         }
         return START_STICKY
     }
 
-    private fun handleActionToggle() {
+    private fun handleActionTogglePlayerState() {
         if (player == null) {
             handleActionPlay()
         } else {
@@ -54,19 +51,19 @@ class MyService : Service() {
     }
 
     private fun handleActionPlay() {
-        var url = getString(R.string.url_48)
-        if (playHQ) url = getString(R.string.url_128)
+        val shouldPlayHq = getSharedPreferences("_", Context.MODE_PRIVATE)
+            .getBoolean(PREF_KEY_PLAY_HQ, true)
+        val url: String
+        url = if (shouldPlayHq) getString(R.string.url_128)
+        else getString(R.string.url_48)
         initializePlayer(url)
-        showNotification()
+        buildNotification(shouldPlayHq)
     }
 
     private fun handleActionStop() {
         releasePlayer()
-//        showNotification("")
-//        stopForeground(STOP_FOREGROUND_DETACH)
         stopForeground(true)
         stopSelf()
-
     }
 
     private fun initializePlayer(url: String) {
@@ -79,7 +76,6 @@ class MyService : Service() {
                 .build()
             player?.setAudioAttributes(audioAttributes, true)
         }
-
         val mediaSource = buildMediaSource(Uri.parse(url))
         player?.prepare(mediaSource)
     }
@@ -103,13 +99,16 @@ class MyService : Service() {
         }
     }
 
-    private fun showNotification() {
-
+    private fun buildNotification(shouldPlayHq: Boolean) {
         val stop = "stop"
         registerReceiver(stopReceiver, IntentFilter(stop))
         val broadcastIntent = PendingIntent.getBroadcast(
             this, 0, Intent(stop), PendingIntent.FLAG_UPDATE_CURRENT
         )
+
+        val notifTitle = getString(R.string.notif_title)
+        val notifContent = if (shouldPlayHq) getString(R.string.text_128_kbps)
+        else getString(R.string.text_48_kbps)
 
 //        val largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_rfi)
         val chanel_id = getString(R.string.norif_channel_id)
@@ -117,8 +116,8 @@ class MyService : Service() {
         val builder = NotificationCompat.Builder(this, chanel_id)
             .setSmallIcon(R.drawable.ic_notif)
 //            .setLargeIcon(largeIcon)
-            .setContentTitle(getString(R.string.notif_title))
-            .setContentText(getString(R.string.notification_text))
+            .setContentTitle(notifTitle)
+            .setContentText(notifContent)
             .setColor(getColor(R.color.colorPrimary))
             .setAutoCancel(true)
 //            .setOngoing(true)
@@ -127,11 +126,6 @@ class MyService : Service() {
 //                android.R.drawable.ic_media_play,
 //                getString(R.string.notif_action_play),
 //                getPendingIntentToService(ACTION_PLAY)
-//            )
-//            .addAction(
-//                android.R.drawable.ic_media_pause,
-//                getString(R.string.notif_action_stop),
-//                buildPendingIntentStop(this)
 //            )
 
         val notificationManager = getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
@@ -144,7 +138,6 @@ class MyService : Service() {
             )
             notificationManager.createNotificationChannel(channel)
         }
-
         val notification = builder.build()
         startForeground(1, notification)
     }
@@ -161,12 +154,13 @@ class MyService : Service() {
 
     companion object {
 
+        const val PREF_KEY_PLAY_HQ = "key_play_hq"
+
         @JvmStatic
-        fun startActionPlay(context: Context, playHQ: Boolean) {
+        fun startActionPlay(context: Context) {
 
             val intent = Intent(context, MyService::class.java)
             intent.action = ACTION_PLAY
-            intent.putExtra(EXTRA_HIGH_QUALITY_PLAY, playHQ)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -176,26 +170,14 @@ class MyService : Service() {
         }
 
         @JvmStatic
-        fun buildPendingIntentToggle(context: Context): PendingIntent? {
+        fun getPendingIntentTogglePlayerState(context: Context): PendingIntent? {
             val intent = Intent(context, MyService::class.java)
             intent.action = ACTION_TOGGLE_PLAYER
-//            intent.putExtra(EXTRA_HIGH_QUALITY_PLAY, playHQ)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 return PendingIntent.getForegroundService(context, 0, intent, 0)
             }
             return PendingIntent.getService(context, 0, intent, 0)
-
         }
-
-        @JvmStatic
-        fun buildPendingIntentStop(context: Context): PendingIntent? {
-            val intent = Intent(context, MyService::class.java)
-            intent.action = ACTION_STOP
-            return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-        }
-
-
     }
-
 
 }
