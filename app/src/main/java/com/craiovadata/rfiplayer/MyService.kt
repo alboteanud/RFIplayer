@@ -1,13 +1,14 @@
 package com.craiovadata.rfiplayer
 
 import android.app.*
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import androidx.core.app.TaskStackBuilder
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -31,7 +32,7 @@ class MyService : Service() {
         val action = intent?.action
         when (action) {
             ACTION_PLAY, null -> {
-                playHQ = intent?.getBooleanExtra(EXTRA_HIGH_QUALITY_PLAY, false) ?:false
+                playHQ = intent?.getBooleanExtra(EXTRA_HIGH_QUALITY_PLAY, false) ?: false
                 handleActionPlay()
             }
             ACTION_STOP -> {
@@ -45,21 +46,18 @@ class MyService : Service() {
     }
 
     private fun handleActionToggle() {
-        if (player==null){
+        if (player == null) {
             handleActionPlay()
-        } else{
+        } else {
             handleActionStop()
         }
     }
 
     private fun handleActionPlay() {
-        if (playHQ) {
-            initializePlayer(getString(R.string.url_128))
-            showNotification(getString(R.string.text_128_kbps))
-        } else {
-            initializePlayer(getString(R.string.url_48))
-            showNotification(getString(R.string.text_48_kbps))
-        }
+        var url = getString(R.string.url_48)
+        if (playHQ) url = getString(R.string.url_128)
+        initializePlayer(url)
+        showNotification()
     }
 
     private fun handleActionStop() {
@@ -97,7 +95,21 @@ class MyService : Service() {
         ).createMediaSource(uri)
     }
 
-    private fun showNotification(txt: String) {
+    private var stopReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            // Stop the service when the notification is tapped
+            unregisterReceiver(this)
+            stopSelf()
+        }
+    }
+
+    private fun showNotification() {
+
+        val stop = "stop"
+        registerReceiver(stopReceiver, IntentFilter(stop))
+        val broadcastIntent = PendingIntent.getBroadcast(
+            this, 0, Intent(stop), PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
 //        val largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_rfi)
         val chanel_id = getString(R.string.norif_channel_id)
@@ -106,21 +118,21 @@ class MyService : Service() {
             .setSmallIcon(R.drawable.ic_notif)
 //            .setLargeIcon(largeIcon)
             .setContentTitle(getString(R.string.notif_title))
-            .setContentText(txt)
+            .setContentText(getString(R.string.notification_text))
             .setColor(getColor(R.color.colorPrimary))
-//            .setAutoCancel(true)
+            .setAutoCancel(true)
 //            .setOngoing(true)
-            .setContentIntent(getPendingIntentToActivity())
+            .setContentIntent(broadcastIntent)
 //            .addAction(
 //                android.R.drawable.ic_media_play,
 //                getString(R.string.notif_action_play),
 //                getPendingIntentToService(ACTION_PLAY)
 //            )
-            .addAction(
-                android.R.drawable.ic_media_pause,
-                getString(R.string.notif_action_stop),
-                buildPendingIntentStop(this)
-            )
+//            .addAction(
+//                android.R.drawable.ic_media_pause,
+//                getString(R.string.notif_action_stop),
+//                buildPendingIntentStop(this)
+//            )
 
         val notificationManager = getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -137,17 +149,6 @@ class MyService : Service() {
         startForeground(1, notification)
     }
 
-
-
-    private fun getPendingIntentToActivity(): PendingIntent? {
-        val intentToActivity = Intent(this, MainActivity::class.java)
-
-        val pendingIntentToActivity: PendingIntent? = TaskStackBuilder.create(this)
-            .addNextIntentWithParentStack(intentToActivity)
-            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
-
-        return pendingIntentToActivity
-    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -194,11 +195,7 @@ class MyService : Service() {
         }
 
 
-
-
     }
-
-
 
 
 }
