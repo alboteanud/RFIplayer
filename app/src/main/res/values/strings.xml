@@ -6,8 +6,11 @@
     <string name="url_128">http://asculta.rfi.ro:9128/live.mp3</string>
     <string name="key_pref_low_mode">key_pref_low_mode</string>
     <string name="norif_channel_id">com.craiovadata.rfiplayer.notification.CHANNEL_ID</string>
-    <string name="text_48_kbps">48 kbps</string>
-    <string name="text_128_kbps">128 kbps</string>
+          <string name="text_48_kbps">48 kbps</string>
+        <string name="text_128_kbps">128 kbps</string>
+    <string name="notif_text">%1$s
+        \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020 \u0020
+        STOP</string>
     <string name="notif_action_play">Play</string>
     <string name="notif_action_stop">Stop</string>
     <string name="widget_logo">RFI</string>

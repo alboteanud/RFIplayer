@@ -1,5 +1,10 @@
 package com.craiovadata.rfiplayer
 
+//import com.google.android.exoplayer2.ExoPlayerFactory
+
+//import com.google.android.exoplayer2.ExoPlayerFactory
+//import com.google.android.exoplayer2.source.ExtractorMediaSource
+
 import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -10,12 +15,14 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.upstream.DataSource
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
+import com.google.android.exoplayer2.util.Util
 
 
 private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
@@ -68,7 +75,8 @@ class MyService : Service() {
 
     private fun initializePlayer(url: String) {
         if (player == null) {
-            player = ExoPlayerFactory.newSimpleInstance(this)
+            player = SimpleExoPlayer.Builder(this).build()
+//            player = ExoPlayerFactory.newSimpleInstance(this)
             player?.playWhenReady = true
             val audioAttributes = AudioAttributes.Builder()
                 .setUsage(C.USAGE_MEDIA)
@@ -86,9 +94,28 @@ class MyService : Service() {
     }
 
     private fun buildMediaSource(uri: Uri): MediaSource {
-        return ExtractorMediaSource.Factory(
-            DefaultHttpDataSourceFactory("rfi_player")
-        ).createMediaSource(uri)
+
+
+        // Produces DataSource instances through which media data is loaded.
+        val dataSourceFactory: DataSource.Factory = DefaultDataSourceFactory(
+            this,
+            Util.getUserAgent(this, "yourApplicationName")
+        )
+// This is the MediaSource representing the media to be played.
+        // This is the MediaSource representing the media to be played.
+        val videoSource: MediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+            .createMediaSource(uri)
+
+        return videoSource
+
+// Prepare the player with the source.
+        // Prepare the player with the source.
+//        player!!.prepare(videoSource)
+
+
+//        return ExtractorMediaSource.Factory(
+//            DefaultHttpDataSourceFactory("rfi_player")
+//        ).createMediaSource(uri)
     }
 
     private var stopReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -107,8 +134,13 @@ class MyService : Service() {
         )
 
         val notifTitle = getString(R.string.notif_title)
-        val notifContent = if (shouldPlayHq) getString(R.string.text_128_kbps)
+        val playFormat = if (shouldPlayHq) getString(R.string.text_128_kbps)
         else getString(R.string.text_48_kbps)
+
+        val notifContent = String.format(
+            getString(R.string.notif_text),
+            playFormat
+        )
 
 //        val largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_rfi)
         val chanel_id = getString(R.string.norif_channel_id)
@@ -128,7 +160,8 @@ class MyService : Service() {
 //                getPendingIntentToService(ACTION_PLAY)
 //            )
 
-        val notificationManager = getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
