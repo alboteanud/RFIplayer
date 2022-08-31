@@ -1,70 +1,64 @@
 package com.craiovadata.rfiplayer
 
-//import com.google.android.exoplayer2.ExoPlayerFactory
-
-//import com.google.android.exoplayer2.ExoPlayerFactory
-//import com.google.android.exoplayer2.source.ExtractorMediaSource
-
 import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.os.Build
 import android.os.IBinder
-import androidx.core.app.NotificationCompat
+import android.support.v4.media.session.MediaSessionCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
-import com.google.android.exoplayer2.util.Util
-
-
-private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
-private const val ACTION_TOGGLE_PLAYER = "com.craiovadata.rfiplayer.action.TOGGLE"
-private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
+import com.google.android.exoplayer2.ui.PlayerNotificationManager
+import timber.log.Timber
 
 class MyService : Service() {
 
-    private var player: SimpleExoPlayer? = null
+    private var player: ExoPlayer? = null
+    private var notificationManager1: PlayerNotificationManager? = null
+    private var mediaSession: MediaSessionCompat? = null
+    private var notificationId: Int = 1
+    private val logoLink =
+        "https://www.rfi.ro/sites/all/themes/rfi/assets/img/logo-rfi-romania-baseline.png"
+    private val url_48 = "http://asculta.rfi.ro:9128/live.aac"
+    private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val action = intent?.action
-        when (action) {
+        when (intent?.action) {
             ACTION_PLAY, null -> {
                 handleActionPlay()
             }
             ACTION_STOP -> {
                 handleActionStop()
             }
-            ACTION_TOGGLE_PLAYER -> {
-                handleActionTogglePlayerState()
-            }
         }
         return START_STICKY
     }
 
-    private fun handleActionTogglePlayerState() {
-        if (player == null) {
-            handleActionPlay()
-        } else {
-            handleActionStop()
-        }
-    }
+
+
+    private var notification: Notification? = null
 
     private fun handleActionPlay() {
-        val shouldPlayHq = getSharedPreferences("_", Context.MODE_PRIVATE)
-            .getBoolean(PREF_KEY_PLAY_HQ, true)
-        val url: String
-        url = if (shouldPlayHq) getString(R.string.url_128)
-        else getString(R.string.url_48)
-        initializePlayer(url)
-        buildNotification(shouldPlayHq)
+
+        if (player == null) {
+            val shouldPlayHq = getSharedPreferences("_", Context.MODE_PRIVATE)
+                .getBoolean(PREF_KEY_PLAY_HQ, true)
+            val url: String =
+                if (shouldPlayHq) url_128
+                else url_48
+            initializePlayer(url)
+        }
+        notifyAndStartForeground()
+        player?.playWhenReady = true
     }
 
     private fun handleActionStop() {
@@ -74,18 +68,17 @@ class MyService : Service() {
     }
 
     private fun initializePlayer(url: String) {
-        if (player == null) {
-            player = SimpleExoPlayer.Builder(this).build()
-//            player = ExoPlayerFactory.newSimpleInstance(this)
-            player?.playWhenReady = true
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(C.USAGE_MEDIA)
-                .setContentType(C.CONTENT_TYPE_MUSIC)
-                .build()
-            player?.setAudioAttributes(audioAttributes, true)
-        }
-        val mediaSource = buildMediaSource(Uri.parse(url))
-        player?.prepare(mediaSource)
+        player = ExoPlayer.Builder(this).build()
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(C.USAGE_MEDIA)
+            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+            .build()
+        player?.setAudioAttributes(audioAttributes, true)
+
+        player?.setMediaItem(
+            MediaItem.fromUri(Uri.parse(url))
+        )
+        player?.prepare()
     }
 
     private fun releasePlayer() {
@@ -93,88 +86,101 @@ class MyService : Service() {
         player = null
     }
 
-    private fun buildMediaSource(uri: Uri): MediaSource {
+    private fun notifyAndStartForeground() {
+        if (notification != null) {
+            startForeground(notificationId, notification)
+        }
 
+        val mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter = object :
+            PlayerNotificationManager.MediaDescriptionAdapter {
+            override fun getCurrentContentTitle(player: Player): String {
+                return getString(R.string.notif_title)
+            }
 
-        // Produces DataSource instances through which media data is loaded.
-        val dataSourceFactory: DataSource.Factory = DefaultDataSourceFactory(
+            override fun getCurrentContentText(player: Player): String? {
+                return "radio"
+            }
+
+            override fun getCurrentLargeIcon(
+                player: Player,
+                callback: PlayerNotificationManager.BitmapCallback
+            ): Bitmap? {
+//                val multi = MultiTransformation(CenterCrop())
+                Glide.with(this@MyService)
+                    .asBitmap()
+                    .load(logoLink)
+//                    .apply(RequestOptions.bitmapTransform(multi))
+                    .into(object : CustomTarget<Bitmap?>() {
+                        override fun onLoadCleared(placeholder: Drawable?) {}
+                        override fun onResourceReady(
+                            resource: Bitmap,
+                            transition: Transition<in Bitmap?>?
+                        ) {
+                            callback.onBitmap(resource)
+                        }
+                    })
+                return null
+            }
+
+            override fun createCurrentContentIntent(player: Player): PendingIntent? {
+                val notifyIntent = Intent(this@MyService, MainActivity::class.java)
+                notifyIntent.flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                return PendingIntent.getActivity(
+                    this@MyService,
+                    0,
+                    notifyIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            }
+        }
+
+        val notificationListener: PlayerNotificationManager.NotificationListener =
+            object : PlayerNotificationManager.NotificationListener {
+                override fun onNotificationCancelled(
+                    notificationId: Int,
+                    dismissedByUser: Boolean
+                ) {
+                    stopForeground(true)
+                    stopSelf()
+                    Timber.d(" onNotifCanceled()")
+                }
+
+                override fun onNotificationPosted(
+                    notificationId: Int,
+                    notification: Notification,
+                    ongoing: Boolean
+                ) {
+                    this@MyService.notification = notification
+                    this@MyService.notificationId = notificationId
+                    startForeground(notificationId, notification)
+                    Timber.d("onNotifPosted()")
+                }
+            }
+
+        notificationManager1 = PlayerNotificationManager.Builder(
             this,
-            Util.getUserAgent(this, "yourApplicationName")
+            notificationId,
+            chanel_id
         )
-// This is the MediaSource representing the media to be played.
-        // This is the MediaSource representing the media to be played.
-        val videoSource: MediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-            .createMediaSource(uri)
+//            .setChannelNameResourceId(R.string.playback_channel_name)
+//            .setChannelDescriptionResourceId(R.string.playback_channel_description)
+            .setMediaDescriptionAdapter(mediaDescriptionAdapter)
+            .setNotificationListener(notificationListener)
+            .build()
 
-        return videoSource
-
-// Prepare the player with the source.
-        // Prepare the player with the source.
-//        player!!.prepare(videoSource)
-
-
-//        return ExtractorMediaSource.Factory(
-//            DefaultHttpDataSourceFactory("rfi_player")
-//        ).createMediaSource(uri)
-    }
-
-    private var stopReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            // Stop the service when the notification is tapped
-            unregisterReceiver(this)
-            stopSelf()
+        notificationManager1?.apply {
+            setUseNextAction(false)
+            setUsePreviousAction(false)
+            setUseFastForwardAction(false)
+            //  setControlDispatcher(DefaultControlDispatcher(0,0) // Hide fast forward & rewind button );
+            setSmallIcon(R.drawable.ic_notif)
+            setPlayer(player)
+            if (mediaSession != null && mediaSession!!.sessionToken != null) {
+                setMediaSessionToken(mediaSession!!.sessionToken)
+            }
         }
     }
-
-    private fun buildNotification(shouldPlayHq: Boolean) {
-        val stop = "stop"
-        registerReceiver(stopReceiver, IntentFilter(stop))
-        val broadcastIntent = PendingIntent.getBroadcast(
-            this, 0, Intent(stop), PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val notifTitle = getString(R.string.notif_title)
-        val playFormat = if (shouldPlayHq) getString(R.string.text_128_kbps)
-        else getString(R.string.text_48_kbps)
-
-        val notifContent = String.format(
-            getString(R.string.notif_text),
-            playFormat
-        )
-
-//        val largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.logo_rfi)
-        val chanel_id = getString(R.string.norif_channel_id)
-
-        val builder = NotificationCompat.Builder(this, chanel_id)
-            .setSmallIcon(R.drawable.ic_notif)
-//            .setLargeIcon(largeIcon)
-            .setContentTitle(notifTitle)
-            .setContentText(notifContent)
-            .setColor(getColor(R.color.colorPrimary))
-            .setAutoCancel(true)
-//            .setOngoing(true)
-            .setContentIntent(broadcastIntent)
-//            .addAction(
-//                android.R.drawable.ic_media_play,
-//                getString(R.string.notif_action_play),
-//                getPendingIntentToService(ACTION_PLAY)
-//            )
-
-        val notificationManager =
-            getSystemService(Activity.NOTIFICATION_SERVICE) as NotificationManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                chanel_id,
-                getString(R.string.notif_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-            notificationManager.createNotificationChannel(channel)
-        }
-        val notification = builder.build()
-        startForeground(1, notification)
-    }
-
 
     override fun onDestroy() {
         super.onDestroy()
@@ -188,29 +194,17 @@ class MyService : Service() {
     companion object {
 
         const val PREF_KEY_PLAY_HQ = "key_play_hq"
+        private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
+        private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
+        private const val chanel_id = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
 
-        @JvmStatic
         fun startActionPlay(context: Context) {
-
             val intent = Intent(context, MyService::class.java)
             intent.action = ACTION_PLAY
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            context.startForegroundService(intent)
         }
 
-        @JvmStatic
-        fun getPendingIntentTogglePlayerState(context: Context): PendingIntent? {
-            val intent = Intent(context, MyService::class.java)
-            intent.action = ACTION_TOGGLE_PLAYER
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                return PendingIntent.getForegroundService(context, 0, intent, 0)
-            }
-            return PendingIntent.getService(context, 0, intent, 0)
-        }
     }
 
 }
