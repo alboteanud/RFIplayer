@@ -18,7 +18,7 @@
             tools:ignore="GoogleAppIndexingWarning">
 
         <service
-                android:name=".MyService"
+                android:name=".AudioService"
                 android:enabled="true"
                 android:exported="true">
         </service>

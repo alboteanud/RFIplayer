@@ -6,8 +6,8 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.craiovadata.rfiplayer.MyService.Companion.PREF_KEY_PLAY_HQ
-import com.craiovadata.rfiplayer.MyService.Companion.startActionPlay
+import com.craiovadata.rfiplayer.AudioService.Companion.PREF_KEY_PLAY_HQ
+import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlay
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
                 statusTextView.text = getString(R.string.text_128_kbps)
             }
             R.id.buttonStop -> {
-                val intent = Intent(this, MyService::class.java)
+                val intent = Intent(this, AudioService::class.java)
                 stopService(intent)
                 statusTextView.text = null
             }

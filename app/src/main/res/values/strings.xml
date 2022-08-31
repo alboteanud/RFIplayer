@@ -5,8 +5,8 @@
     <string name="key_pref_low_mode">key_pref_low_mode</string>
     <string name="text_48_kbps">48 kbps</string>
     <string name="text_128_kbps">128 kbps</string>
-    <string name="notif_action_play">Play</string>
-    <string name="notif_action_stop">Stop</string>
     <string name="widget_logo">RFI</string>
-    <string name="notification_text">Apasă pentru oprire</string>
+    <!-- Audio -->
+    <string name="playback_channel_name" translatable="false">Playback</string>
+    <string name="playback_channel_description" translatable="false">Playback background mode</string>
 </resources>

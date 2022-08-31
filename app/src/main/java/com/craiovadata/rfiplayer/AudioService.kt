@@ -1,7 +1,6 @@
 package com.craiovadata.rfiplayer
 
 import android.app.*
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -20,7 +19,7 @@ import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import timber.log.Timber
 
-class MyService : Service() {
+class AudioService : Service() {
 
     private var player: ExoPlayer? = null
     private var notificationManager1: PlayerNotificationManager? = null
@@ -106,7 +105,7 @@ class MyService : Service() {
                 callback: PlayerNotificationManager.BitmapCallback
             ): Bitmap? {
 //                val multi = MultiTransformation(CenterCrop())
-                Glide.with(this@MyService)
+                Glide.with(this@AudioService)
                     .asBitmap()
                     .load(logoLink)
 //                    .apply(RequestOptions.bitmapTransform(multi))
@@ -123,11 +122,11 @@ class MyService : Service() {
             }
 
             override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                val notifyIntent = Intent(this@MyService, MainActivity::class.java)
+                val notifyIntent = Intent(this@AudioService, MainActivity::class.java)
                 notifyIntent.flags =
                     Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 return PendingIntent.getActivity(
-                    this@MyService,
+                    this@AudioService,
                     0,
                     notifyIntent,
                     PendingIntent.FLAG_IMMUTABLE
@@ -151,8 +150,8 @@ class MyService : Service() {
                     notification: Notification,
                     ongoing: Boolean
                 ) {
-                    this@MyService.notification = notification
-                    this@MyService.notificationId = notificationId
+                    this@AudioService.notification = notification
+                    this@AudioService.notificationId = notificationId
                     startForeground(notificationId, notification)
                     Timber.d("onNotifPosted()")
                 }
@@ -163,8 +162,8 @@ class MyService : Service() {
             notificationId,
             chanel_id
         )
-//            .setChannelNameResourceId(R.string.playback_channel_name)
-//            .setChannelDescriptionResourceId(R.string.playback_channel_description)
+            .setChannelNameResourceId(R.string.playback_channel_name)
+            .setChannelDescriptionResourceId(R.string.playback_channel_description)
             .setMediaDescriptionAdapter(mediaDescriptionAdapter)
             .setNotificationListener(notificationListener)
             .build()
@@ -199,7 +198,7 @@ class MyService : Service() {
         private const val chanel_id = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
 
         fun startActionPlay(context: Context) {
-            val intent = Intent(context, MyService::class.java)
+            val intent = Intent(context, AudioService::class.java)
             intent.action = ACTION_PLAY
 
             context.startForegroundService(intent)
