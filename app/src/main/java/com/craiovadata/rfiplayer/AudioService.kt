@@ -6,78 +6,57 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.IBinder
-import android.support.v4.media.session.MediaSessionCompat
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
+import androidx.core.app.ServiceCompat.stopForeground
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import timber.log.Timber
 
 class AudioService : Service() {
-
     private var player: ExoPlayer? = null
-    private var notificationManager1: PlayerNotificationManager? = null
-    private var mediaSession: MediaSessionCompat? = null
-    private var notificationId: Int = 1
-    private var notification: Notification? = null
+    private var notifManager: PlayerNotificationManager? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_PLAY_128 -> {
-                currentUrl = url_128
-                handleActionPlay()
-            }
-            ACTION_PLAY_48 -> {
-                currentUrl = url_48
-                handleActionPlay()
-            }
-            ACTION_STOP -> {
-                handleActionStop()
-            }
+            ACTION_PLAY_128 -> handleActionPlay(url_128)
+            ACTION_PLAY_48 -> handleActionPlay(url_48)
+            ACTION_STOP -> handleActionStop()
         }
         return START_STICKY
     }
 
-    private fun handleActionPlay() {
-        if (player == null) {
-            player = ExoPlayer.Builder(this).build()
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(C.USAGE_MEDIA)
-                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                .build()
-            player?.setAudioAttributes(audioAttributes, true)
-        }
+    private fun handleActionPlay(newUrl: String) {
+        initPlayerIfNeeded()
         player?.apply {
-            playWhenReady = true
-            setMediaItem(MediaItem.fromUri(Uri.parse(currentUrl)))
+            if (currentUrl != newUrl || !isPlaying)
+                setMediaItem(MediaItem.fromUri(Uri.parse(newUrl)))
+            currentUrl = newUrl
             prepare()
-            notifyAndStartForeground()
+            play()
+            initNotifManagerIfNeeded()
         }
+    }
+
+    private fun initPlayerIfNeeded() {
+        if (player != null) return
+        player = ExoPlayer.Builder(this).build()
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(C.USAGE_MEDIA)
+            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+            .build()
+        player?.setAudioAttributes(audioAttributes, true)
     }
 
     private fun handleActionStop() {
-        player?.playWhenReady = false
-        stopForeground(true)
+        player?.pause()
+//        stopForeground(STOP_FOREGROUND_DETACH)
     }
 
-    private fun releasePlayer() {
-        player?.release()
-        player = null
-    }
-
-    private fun notifyAndStartForeground() {
-        if (notification != null) {
-            startForeground(notificationId, notification)
-        }
-
+    private fun getMediaDescriptorAdapter(): PlayerNotificationManager.MediaDescriptionAdapter {
         val mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter = object :
             PlayerNotificationManager.MediaDescriptionAdapter {
             override fun getCurrentContentTitle(player: Player): String {
@@ -92,20 +71,6 @@ class AudioService : Service() {
                 player: Player,
                 callback: PlayerNotificationManager.BitmapCallback
             ): Bitmap? {
-//                val multi = MultiTransformation(CenterCrop())
-                Glide.with(this@AudioService)
-                    .asBitmap()
-                    .load(logoLink)
-//                    .apply(RequestOptions.bitmapTransform(multi))
-                    .into(object : CustomTarget<Bitmap?>() {
-                        override fun onLoadCleared(placeholder: Drawable?) {}
-                        override fun onResourceReady(
-                            resource: Bitmap,
-                            transition: Transition<in Bitmap?>?
-                        ) {
-                            callback.onBitmap(resource)
-                        }
-                    })
                 return null
             }
 
@@ -121,16 +86,40 @@ class AudioService : Service() {
                 )
             }
         }
+        return mediaDescriptionAdapter
+    }
 
+    private fun initNotifManagerIfNeeded() {
+        if (notifManager != null) return
+        val notificationId = 9
+        notifManager = PlayerNotificationManager.Builder(
+            this,
+            notificationId,
+            chanel_id
+        )
+            .setChannelNameResourceId(R.string.playback_channel_name)
+            .setChannelDescriptionResourceId(R.string.playback_channel_description)
+            .setMediaDescriptionAdapter(getMediaDescriptorAdapter())
+            .setNotificationListener(getNotifListener())
+            .build()
+            .apply {
+                setUseNextAction(false)
+                setUsePreviousAction(false)
+                setUseFastForwardAction(false)
+                setSmallIcon(R.drawable.ic_notif)
+                setPlayer(player)
+            }
+    }
+
+    private fun getNotifListener(): PlayerNotificationManager.NotificationListener {
         val notificationListener: PlayerNotificationManager.NotificationListener =
             object : PlayerNotificationManager.NotificationListener {
                 override fun onNotificationCancelled(
                     notificationId: Int,
                     dismissedByUser: Boolean
                 ) {
-                    stopForeground(true)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
-                    Timber.d(" onNotifCanceled()")
                 }
 
                 override fun onNotificationPosted(
@@ -138,40 +127,15 @@ class AudioService : Service() {
                     notification: Notification,
                     ongoing: Boolean
                 ) {
-                    this@AudioService.notification = notification
-                    this@AudioService.notificationId = notificationId
                     startForeground(notificationId, notification)
-                    Timber.d("onNotifPosted()")
                 }
             }
-
-        notificationManager1 = PlayerNotificationManager.Builder(
-            this,
-            notificationId,
-            chanel_id
-        )
-            .setChannelNameResourceId(R.string.playback_channel_name)
-            .setChannelDescriptionResourceId(R.string.playback_channel_description)
-            .setMediaDescriptionAdapter(mediaDescriptionAdapter)
-            .setNotificationListener(notificationListener)
-            .build()
-
-        notificationManager1?.apply {
-            setUseNextAction(false)
-            setUsePreviousAction(false)
-            setUseFastForwardAction(false)
-            //  setControlDispatcher(DefaultControlDispatcher(0,0) // Hide fast forward & rewind button );
-            setSmallIcon(R.drawable.ic_notif)
-            setPlayer(player)
-            if (mediaSession != null && mediaSession!!.sessionToken != null) {
-                setMediaSessionToken(mediaSession!!.sessionToken)
-            }
-        }
+        return notificationListener
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        releasePlayer()
+        player?.release()
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -184,8 +148,6 @@ class AudioService : Service() {
         private const val ACTION_PLAY_128 = "com.craiovadata.rfiplayer.action.PLAY_128_kbps"
         private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
         private const val chanel_id = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
-        private val logoLink =
-            "https://www.rfi.ro/sites/all/themes/rfi/assets/img/logo-rfi-romania-baseline.png"
         private val url_48 = "http://asculta.rfi.ro:9128/live.aac"
         private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
         private var currentUrl: String? = null
