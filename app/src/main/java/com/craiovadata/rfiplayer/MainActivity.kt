@@ -1,35 +1,30 @@
 package com.craiovadata.rfiplayer
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.craiovadata.rfiplayer.AudioService.Companion.PREF_KEY_PLAY_HQ
-import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlay
+import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlay128
+import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlay48
 
 class MainActivity : AppCompatActivity() {
-
+    private lateinit var statusTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        statusTextView = findViewById(R.id.statusTextView)
     }
 
     fun onClick(v: View) {
-        val statusTextView = findViewById<TextView>(R.id.statusTextView)
         when (v.id) {
             R.id.buttonPlay48 -> {
-                getSharedPreferences("_", Context.MODE_PRIVATE).edit()
-                    .putBoolean(PREF_KEY_PLAY_HQ, false).apply()
-                startActionPlay(this)
+                startActionPlay48(this)
                 statusTextView.text = getString(R.string.text_48_kbps)
             }
             R.id.buttonPlay128 -> {
-                getSharedPreferences("_", Context.MODE_PRIVATE).edit()
-                    .putBoolean(PREF_KEY_PLAY_HQ, true).apply()
-                startActionPlay(this)
+                startActionPlay128(this)
                 statusTextView.text = getString(R.string.text_128_kbps)
             }
             R.id.buttonStop -> {
@@ -38,6 +33,11 @@ class MainActivity : AppCompatActivity() {
                 statusTextView.text = null
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        statusTextView.text = AudioService.getCurrentContentText()?.let { getString(it) }
     }
 
 }

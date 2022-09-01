@@ -1,6 +1,8 @@
 package com.craiovadata.rfiplayer
 
-import android.app.*
+import android.app.Notification
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -25,14 +27,16 @@ class AudioService : Service() {
     private var notificationManager1: PlayerNotificationManager? = null
     private var mediaSession: MediaSessionCompat? = null
     private var notificationId: Int = 1
-    private val logoLink =
-        "https://www.rfi.ro/sites/all/themes/rfi/assets/img/logo-rfi-romania-baseline.png"
-    private val url_48 = "http://asculta.rfi.ro:9128/live.aac"
-    private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
+    private var notification: Notification? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_PLAY, null -> {
+            ACTION_PLAY_128 -> {
+                currentUrl = url_128
+                handleActionPlay()
+            }
+            ACTION_PLAY_48 -> {
+                currentUrl = url_48
                 handleActionPlay()
             }
             ACTION_STOP -> {
@@ -42,42 +46,26 @@ class AudioService : Service() {
         return START_STICKY
     }
 
-
-
-    private var notification: Notification? = null
-
     private fun handleActionPlay() {
-
         if (player == null) {
-            val shouldPlayHq = getSharedPreferences("_", Context.MODE_PRIVATE)
-                .getBoolean(PREF_KEY_PLAY_HQ, true)
-            val url: String =
-                if (shouldPlayHq) url_128
-                else url_48
-            initializePlayer(url)
+            player = ExoPlayer.Builder(this).build()
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build()
+            player?.setAudioAttributes(audioAttributes, true)
         }
-        notifyAndStartForeground()
-        player?.playWhenReady = true
+        player?.apply {
+            playWhenReady = true
+            setMediaItem(MediaItem.fromUri(Uri.parse(currentUrl)))
+            prepare()
+            notifyAndStartForeground()
+        }
     }
 
     private fun handleActionStop() {
-        releasePlayer()
+        player?.playWhenReady = false
         stopForeground(true)
-        stopSelf()
-    }
-
-    private fun initializePlayer(url: String) {
-        player = ExoPlayer.Builder(this).build()
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(C.USAGE_MEDIA)
-            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-            .build()
-        player?.setAudioAttributes(audioAttributes, true)
-
-        player?.setMediaItem(
-            MediaItem.fromUri(Uri.parse(url))
-        )
-        player?.prepare()
     }
 
     private fun releasePlayer() {
@@ -97,7 +85,7 @@ class AudioService : Service() {
             }
 
             override fun getCurrentContentText(player: Player): String? {
-                return "radio"
+                return getCurrentContentText()?.let { getString(it) }
             }
 
             override fun getCurrentLargeIcon(
@@ -192,16 +180,34 @@ class AudioService : Service() {
 
     companion object {
 
-        const val PREF_KEY_PLAY_HQ = "key_play_hq"
-        private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
+        private const val ACTION_PLAY_48 = "com.craiovadata.rfiplayer.action.PLAY_48_kbps"
+        private const val ACTION_PLAY_128 = "com.craiovadata.rfiplayer.action.PLAY_128_kbps"
         private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
         private const val chanel_id = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
+        private val logoLink =
+            "https://www.rfi.ro/sites/all/themes/rfi/assets/img/logo-rfi-romania-baseline.png"
+        private val url_48 = "http://asculta.rfi.ro:9128/live.aac"
+        private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
+        private var currentUrl: String? = null
 
-        fun startActionPlay(context: Context) {
+        fun startActionPlay128(context: Context) {
             val intent = Intent(context, AudioService::class.java)
-            intent.action = ACTION_PLAY
-
+            intent.action = ACTION_PLAY_128
             context.startForegroundService(intent)
+        }
+
+        fun startActionPlay48(context: Context) {
+            val intent = Intent(context, AudioService::class.java)
+            intent.action = ACTION_PLAY_48
+            context.startForegroundService(intent)
+        }
+
+        fun getCurrentContentText(): Int? {
+            return when (currentUrl) {
+                url_128 -> R.string.text_128_kbps
+                url_48 -> R.string.text_48_kbps
+                else -> null
+            }
         }
 
     }
