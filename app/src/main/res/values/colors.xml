@@ -3,10 +3,5 @@
     <color name="colorPrimary">#D00009</color>
     <color name="colorPrimaryDark">#A00009</color>
     <color name="colorAccent">#FFC107</color>
-
-    <color name="transparent">#00000000</color>
-    <color name="graySemi">#22000000</color>
-
-    <color name="background_holo">#2D2D2D</color>
-
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

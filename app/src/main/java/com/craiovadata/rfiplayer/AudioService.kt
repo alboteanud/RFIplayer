@@ -8,7 +8,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.IBinder
-import androidx.core.app.ServiceCompat.stopForeground
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -17,6 +16,7 @@ import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 
 class AudioService : Service() {
+
     private var player: ExoPlayer? = null
     private var notifManager: PlayerNotificationManager? = null
 
@@ -24,7 +24,7 @@ class AudioService : Service() {
         when (intent?.action) {
             ACTION_PLAY_128 -> handleActionPlay(url_128)
             ACTION_PLAY_48 -> handleActionPlay(url_48)
-            ACTION_STOP -> handleActionStop()
+            ACTION_STOP ->  player?.pause()
         }
         return START_STICKY
     }
@@ -51,11 +51,6 @@ class AudioService : Service() {
         player?.setAudioAttributes(audioAttributes, true)
     }
 
-    private fun handleActionStop() {
-        player?.pause()
-//        stopForeground(STOP_FOREGROUND_DETACH)
-    }
-
     private fun getMediaDescriptorAdapter(): PlayerNotificationManager.MediaDescriptionAdapter {
         val mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter = object :
             PlayerNotificationManager.MediaDescriptionAdapter {
@@ -75,13 +70,10 @@ class AudioService : Service() {
             }
 
             override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                val notifyIntent = Intent(this@AudioService, MainActivity::class.java)
-                notifyIntent.flags =
-                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 return PendingIntent.getActivity(
                     this@AudioService,
                     0,
-                    notifyIntent,
+                    Intent(this@AudioService, MainActivity::class.java),
                     PendingIntent.FLAG_IMMUTABLE
                 )
             }
@@ -106,7 +98,7 @@ class AudioService : Service() {
                 setUseNextAction(false)
                 setUsePreviousAction(false)
                 setUseFastForwardAction(false)
-                setSmallIcon(R.drawable.ic_notif)
+//                setSmallIcon(R.mipmap.ic_launcher)
                 setPlayer(player)
             }
     }
@@ -135,6 +127,7 @@ class AudioService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        player?.stop()
         player?.release()
     }
 
