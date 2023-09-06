@@ -4,16 +4,19 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.craiovadata.rfiplayer.MyService.Companion.PREF_KEY_PLAY_HQ
 import com.craiovadata.rfiplayer.MyService.Companion.startActionPlay
-import kotlinx.android.synthetic.main.content_main.*
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var statusTextView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        statusTextView = findViewById(R.id.statusTextView)
     }
 
     fun onClick(v: View) {
