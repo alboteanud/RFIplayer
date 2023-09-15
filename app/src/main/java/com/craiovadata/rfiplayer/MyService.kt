@@ -91,21 +91,25 @@ class MyService : Service() {
             this,
             Util.getUserAgent(this, "yourApplicationName")
         )
-        return ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(uri))
+        return ProgressiveMediaSource.Factory(dataSourceFactory)
+            .createMediaSource(MediaItem.fromUri(uri))
     }
 
     private var stopReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             // Stop the service when the notification is tapped
-            unregisterReceiver(this)
             stopSelf()
         }
     }
 
+    private var registeredReceiver = false
+
     private fun buildNotification(shouldPlayHq: Boolean) {
         val stop = "stop"
-        registerReceiver(stopReceiver, IntentFilter(stop),  RECEIVER_NOT_EXPORTED )
-        val broadcastIntent = PendingIntent.getBroadcast(this, 0, Intent(stop), PendingIntent.FLAG_IMMUTABLE)
+        registerReceiver(stopReceiver, IntentFilter(stop), RECEIVER_NOT_EXPORTED)
+        registeredReceiver = true
+        val broadcastIntent =
+            PendingIntent.getBroadcast(this, 0, Intent(stop), PendingIntent.FLAG_IMMUTABLE)
 
         val notifTitle = getString(R.string.notif_title)
         val playFormat = if (shouldPlayHq) getString(R.string.text_128_kbps)
@@ -149,7 +153,16 @@ class MyService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         releasePlayer()
-        unregisterReceiver(stopReceiver)
+        unregisterReceiver()
+    }
+
+    private fun unregisterReceiver() {
+        if (!registeredReceiver) return
+        try {
+            unregisterReceiver(stopReceiver)
+        } catch (e: Exception) {
+//            e.printStackTrace()
+        }
     }
 
     override fun onBind(intent: Intent): IBinder? {
