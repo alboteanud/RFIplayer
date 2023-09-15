@@ -15,7 +15,7 @@ class MyAppWidgetProvider : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             // Create an Intent to launch ExampleActivity
             val intentToMainActivity = Intent(context, MainActivity::class.java)
-            val pendingIntent = PendingIntent.getActivity(context, 0, intentToMainActivity, 0)
+            val pendingIntent = PendingIntent.getActivity(context, 0, intentToMainActivity, PendingIntent.FLAG_IMMUTABLE)
 
             // Get the layout for the App Widget and attach an on-click listener
             // to the button
@@ -25,7 +25,6 @@ class MyAppWidgetProvider : AppWidgetProvider() {
             val pendingIntentStartService = MyService.getPendingIntentTogglePlayerState(context)
             views.setOnClickPendingIntent(R.id.widgetButton, pendingIntentStartService)
 //            views.setTextViewText(R.id.widgetTextViewTemperature, tempTxt)
-
 
             // Tell the AppWidgetManager to perform an update on the current app widget
             appWidgetManager.updateAppWidget(appWidgetId, views)

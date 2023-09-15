@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
@@ -25,7 +26,7 @@ private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
 
 class MyService : Service() {
 
-    private var player: SimpleExoPlayer? = null
+    private var player: ExoPlayer? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
@@ -68,7 +69,7 @@ class MyService : Service() {
 
     private fun initializePlayer(url: String) {
         if (player == null) {
-            player = SimpleExoPlayer.Builder(this).build()
+            player = ExoPlayer.Builder(this).build()
             player?.playWhenReady = true
             val audioAttributes = AudioAttributes.Builder()
                 .setUsage(C.USAGE_MEDIA)
@@ -90,8 +91,7 @@ class MyService : Service() {
             this,
             Util.getUserAgent(this, "yourApplicationName")
         )
-        return ProgressiveMediaSource.Factory(dataSourceFactory)
-            .createMediaSource(MediaItem.fromUri(uri))
+        return ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(MediaItem.fromUri(uri))
     }
 
     private var stopReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -104,7 +104,7 @@ class MyService : Service() {
 
     private fun buildNotification(shouldPlayHq: Boolean) {
         val stop = "stop"
-        registerReceiver(stopReceiver, IntentFilter(stop))
+        registerReceiver(stopReceiver, IntentFilter(stop),  RECEIVER_NOT_EXPORTED )
         val broadcastIntent = PendingIntent.getBroadcast(this, 0, Intent(stop), PendingIntent.FLAG_IMMUTABLE)
 
         val notifTitle = getString(R.string.notif_title)
@@ -149,6 +149,7 @@ class MyService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         releasePlayer()
+        unregisterReceiver(stopReceiver)
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -164,14 +165,13 @@ class MyService : Service() {
             val intent = Intent(context, MyService::class.java)
             intent.action = ACTION_PLAY
             context.startForegroundService(intent)
-//            context.startForegroundService(intent)
         }
 
         @JvmStatic
         fun getPendingIntentTogglePlayerState(context: Context): PendingIntent? {
             val intent = Intent(context, MyService::class.java)
             intent.action = ACTION_TOGGLE_PLAYER
-            return PendingIntent.getForegroundService(context, 0, intent, 0)
+            return PendingIntent.getForegroundService(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
         }
     }
 
