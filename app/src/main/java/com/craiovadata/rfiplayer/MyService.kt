@@ -164,6 +164,7 @@ class MyService : Service() {
             val intent = Intent(context, MyService::class.java)
             intent.action = ACTION_PLAY
             context.startForegroundService(intent)
+//            context.startForegroundService(intent)
         }
 
         @JvmStatic
