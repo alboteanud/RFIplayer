@@ -19,7 +19,6 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import kotlin.random.Random
 
-
 private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
 private const val ACTION_TOGGLE_PLAYER = "com.craiovadata.rfiplayer.action.TOGGLE"
 private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
