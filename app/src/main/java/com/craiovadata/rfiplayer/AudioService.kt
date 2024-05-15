@@ -21,34 +21,23 @@ class AudioService : Service() {
     private var notifManager: PlayerNotificationManager? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
-            ACTION_PLAY_128 -> handleActionPlay(url_128)
-            ACTION_PLAY_48 -> handleActionPlay(url_48)
-            ACTION_STOP ->  player?.pause()
+        if (intent?.action == ACTION_PLAY_128) {
+            player = ExoPlayer.Builder(this).build()
+            player?.apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(C.USAGE_MEDIA)
+                        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                        .build(), true
+                )
+                setMediaItem(MediaItem.fromUri(Uri.parse(url_128)))
+                playWhenReady = true
+                prepare()
+//                play()
+                initNotifManagerIfNeeded()
+            }
         }
         return START_STICKY
-    }
-
-    private fun handleActionPlay(newUrl: String) {
-        initPlayerIfNeeded()
-        player?.apply {
-            if (currentUrl != newUrl || !isPlaying)
-                setMediaItem(MediaItem.fromUri(Uri.parse(newUrl)))
-            currentUrl = newUrl
-            prepare()
-            play()
-            initNotifManagerIfNeeded()
-        }
-    }
-
-    private fun initPlayerIfNeeded() {
-        if (player != null) return
-        player = ExoPlayer.Builder(this).build()
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(C.USAGE_MEDIA)
-            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-            .build()
-        player?.setAudioAttributes(audioAttributes, true)
     }
 
     private fun getMediaDescriptorAdapter(): PlayerNotificationManager.MediaDescriptionAdapter {
@@ -58,9 +47,7 @@ class AudioService : Service() {
                 return getString(R.string.notif_title)
             }
 
-            override fun getCurrentContentText(player: Player): String? {
-                return getCurrentContentText()?.let { getString(it) }
-            }
+            override fun getCurrentContentText(player: Player) = getString(R.string.text_128_kbps)
 
             override fun getCurrentLargeIcon(
                 player: Player,
@@ -82,12 +69,10 @@ class AudioService : Service() {
     }
 
     private fun initNotifManagerIfNeeded() {
-        if (notifManager != null) return
-        val notificationId = 9
         notifManager = PlayerNotificationManager.Builder(
             this,
-            notificationId,
-            chanel_id
+            99,
+            "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
         )
             .setChannelNameResourceId(R.string.playback_channel_name)
             .setChannelDescriptionResourceId(R.string.playback_channel_description)
@@ -119,7 +104,11 @@ class AudioService : Service() {
                     notification: Notification,
                     ongoing: Boolean
                 ) {
-                    startForeground(notificationId, notification)
+                    if (player == null) {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                    } else {
+                        startForeground(notificationId, notification)
+                    }
                 }
             }
         return notificationListener
@@ -129,6 +118,7 @@ class AudioService : Service() {
         super.onDestroy()
         player?.stop()
         player?.release()
+        stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -137,34 +127,14 @@ class AudioService : Service() {
 
     companion object {
 
-        private const val ACTION_PLAY_48 = "com.craiovadata.rfiplayer.action.PLAY_48_kbps"
         private const val ACTION_PLAY_128 = "com.craiovadata.rfiplayer.action.PLAY_128_kbps"
-        private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
-        private const val chanel_id = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
-        private val url_48 = "http://asculta.rfi.ro:9128/live.aac"
         private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
-        private var currentUrl: String? = null
 
         fun startActionPlay128(context: Context) {
             val intent = Intent(context, AudioService::class.java)
             intent.action = ACTION_PLAY_128
             context.startForegroundService(intent)
         }
-
-        fun startActionPlay48(context: Context) {
-            val intent = Intent(context, AudioService::class.java)
-            intent.action = ACTION_PLAY_48
-            context.startForegroundService(intent)
-        }
-
-        fun getCurrentContentText(): Int? {
-            return when (currentUrl) {
-                url_128 -> R.string.text_128_kbps
-                url_48 -> R.string.text_48_kbps
-                else -> null
-            }
-        }
-
     }
 
 }
