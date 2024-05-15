@@ -106,7 +106,9 @@ class AudioService : Service() {
                     notification: Notification,
                     ongoing: Boolean
                 ) {
-                   startForeground(notificationId, notification, FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                    if (player!=null){
+                        startForeground(notificationId, notification, FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                    }
                 }
             }
         return notificationListener
