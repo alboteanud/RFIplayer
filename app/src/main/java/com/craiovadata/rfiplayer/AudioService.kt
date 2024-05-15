@@ -5,8 +5,10 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.os.IBinder
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
@@ -104,11 +106,7 @@ class AudioService : Service() {
                     notification: Notification,
                     ongoing: Boolean
                 ) {
-                    if (player == null) {
-                        stopForeground(STOP_FOREGROUND_REMOVE)
-                    } else {
-                        startForeground(notificationId, notification)
-                    }
+                   startForeground(notificationId, notification, FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
                 }
             }
         return notificationListener

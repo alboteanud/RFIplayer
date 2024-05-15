@@ -8,22 +8,26 @@
         android:orientation="vertical"
         tools:context=".MainActivity">
 
-    <Button
+    <ImageButton
             android:id="@+id/buttonPlay128"
             android:layout_height="wrap_content"
-            android:layout_width="150dp"
+            android:layout_width="wrap_content"
             android:layout_marginTop="200dp"
-            android:minHeight="60dp"
+            android:minHeight="@dimen/min_btn_size"
+            android:minWidth="@dimen/min_btn_size"
+            android:src="@drawable/ic_play"
             android:onClick="onClick"
-            android:text="Play" />
+            android:contentDescription="play" />
 
-    <Button
+    <ImageButton
             android:id="@+id/buttonStop"
             android:layout_height="wrap_content"
-            android:layout_width="150dp"
+            android:layout_width="wrap_content"
             android:layout_marginTop="200dp"
-            android:minHeight="60dp"
+            android:minHeight="@dimen/min_btn_size"
+            android:minWidth="@dimen/min_btn_size"
             android:onClick="onClick"
-            android:text="Stop" />
+            android:src="@drawable/ic_stop"
+            android:contentDescription="stop" />
 
 </LinearLayout>
