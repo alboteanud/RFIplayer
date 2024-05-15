@@ -24,9 +24,9 @@ class AudioService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_PLAY_128) {
-           if (player!=null && player?.isPlaying != true){
-               player?.prepare()
-           }else {
+            if (player != null && player?.isPlaying != true) {
+                player?.prepare()
+            } else {
                 player = ExoPlayer.Builder(this).build()
                 player?.apply {
                     setAudioAttributes(
