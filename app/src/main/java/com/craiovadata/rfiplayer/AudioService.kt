@@ -24,20 +24,25 @@ class AudioService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_PLAY_128) {
-            player = ExoPlayer.Builder(this).build()
-            player?.apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(C.USAGE_MEDIA)
-                        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                        .build(), true
-                )
-                setMediaItem(MediaItem.fromUri(Uri.parse(url_128)))
-                playWhenReady = true
-                prepare()
-//                play()
-                initNotifManagerIfNeeded()
+           if (player!=null && player?.isPlaying != true){
+               player?.prepare()
+           }else {
+                player = ExoPlayer.Builder(this).build()
+                player?.apply {
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(C.USAGE_MEDIA)
+                            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                            .build(), true
+                    )
+                    setMediaItem(MediaItem.fromUri(Uri.parse(url_128)))
+                    playWhenReady = true
+                    prepare()
+                    initNotifManagerIfNeeded()
+                }
             }
+        } else if (intent?.action == ACTION_STOP) {
+            player?.stop()
         }
         return START_STICKY
     }
@@ -97,7 +102,6 @@ class AudioService : Service() {
                     notificationId: Int,
                     dismissedByUser: Boolean
                 ) {
-                    stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                 }
 
@@ -106,8 +110,12 @@ class AudioService : Service() {
                     notification: Notification,
                     ongoing: Boolean
                 ) {
-                    if (player!=null){
-                        startForeground(notificationId, notification, FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                    if (player != null) {
+                        startForeground(
+                            notificationId,
+                            notification,
+                            FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                        )
                     }
                 }
             }
@@ -127,13 +135,20 @@ class AudioService : Service() {
 
     companion object {
 
-        private const val ACTION_PLAY_128 = "com.craiovadata.rfiplayer.action.PLAY_128_kbps"
+        private const val ACTION_PLAY_128 = "com.craiovadata.rfiplayer.action.PLAY"
+        private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
         private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
 
         fun startActionPlay128(context: Context) {
             val intent = Intent(context, AudioService::class.java)
             intent.action = ACTION_PLAY_128
             context.startForegroundService(intent)
+        }
+
+        fun startActionStop(context: Context) {
+            val intent = Intent(context, AudioService::class.java)
+            intent.action = ACTION_STOP
+            context.startService(intent)
         }
     }
 

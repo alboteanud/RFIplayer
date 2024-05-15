@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlay128
+import com.craiovadata.rfiplayer.AudioService.Companion.startActionStop
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,8 +20,7 @@ class MainActivity : AppCompatActivity() {
                 startActionPlay128(this)
             }
             R.id.buttonStop -> {
-                val intent = Intent(this, AudioService::class.java)
-                stopService(intent)
+                startActionStop(this)
             }
         }
     }
