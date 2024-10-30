@@ -24,11 +24,7 @@ class AudioService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_PLAY_128) {
-            if (player != null && player?.isPlaying != true) {
-                player?.prepare()
-            } else {
-                player = ExoPlayer.Builder(this).build()
-                player?.apply {
+            if (player == null) {  player = ExoPlayer.Builder(this).build().apply {
                     setAudioAttributes(
                         AudioAttributes.Builder()
                             .setUsage(C.USAGE_MEDIA)
@@ -43,6 +39,8 @@ class AudioService : Service() {
             }
         } else if (intent?.action == ACTION_STOP) {
             player?.stop()
+            player?.release()
+            player = null
         }
         return START_STICKY
     }
