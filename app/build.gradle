@@ -7,8 +7,8 @@ android {
         applicationId "com.craiovadata.rfiplayer"
         minSdkVersion 30
         targetSdkVersion 34
-        versionCode 3
-        versionName "1.3"
+        versionCode 4
+        versionName "1.4"
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -34,3 +34,4 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.19.1'
 }
+

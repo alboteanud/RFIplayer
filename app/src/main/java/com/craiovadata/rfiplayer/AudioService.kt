@@ -8,14 +8,15 @@ import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import android.os.IBinder
+import androidx.core.app.NotificationCompat
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
+
 
 class AudioService : Service() {
 
@@ -34,13 +35,16 @@ class AudioService : Service() {
                     setMediaItem(MediaItem.fromUri(Uri.parse(url_128)))
                     playWhenReady = true
                     prepare()
-                    initNotifManagerIfNeeded()
+                    initNotifManager()
                 }
+                val notification = createNotification()
+                startForeground(NOTIFICATION_ID, notification)
             }
         } else if (intent?.action == ACTION_STOP) {
             player?.stop()
             player?.release()
             player = null
+            stopForeground(STOP_FOREGROUND_REMOVE)
         }
         return START_STICKY
     }
@@ -64,7 +68,7 @@ class AudioService : Service() {
             override fun createCurrentContentIntent(player: Player): PendingIntent? {
                 return PendingIntent.getActivity(
                     this@AudioService,
-                    0,
+                    REQUEST_CODE,
                     Intent(this@AudioService, MainActivity::class.java),
                     PendingIntent.FLAG_IMMUTABLE
                 )
@@ -73,11 +77,11 @@ class AudioService : Service() {
         return mediaDescriptionAdapter
     }
 
-    private fun initNotifManagerIfNeeded() {
+    private fun initNotifManager() {
         notifManager = PlayerNotificationManager.Builder(
             this,
-            99,
-            "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
+            NOTIFICATION_ID,
+            CHANNEL_ID
         )
             .setChannelNameResourceId(R.string.playback_channel_name)
             .setChannelDescriptionResourceId(R.string.playback_channel_description)
@@ -120,6 +124,27 @@ class AudioService : Service() {
         return notificationListener
     }
 
+    private fun createNotification(): Notification {
+        val contentIntent = PendingIntent.getActivity(
+            this, REQUEST_CODE,
+            Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
+        )
+        val stopActionIntent = PendingIntent.getService(
+            this, 0,
+            Intent(this, AudioService::class.java).setAction(ACTION_STOP),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val builder: NotificationCompat.Builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("RFI Player")
+            .setContentText("Playing...")
+            .setSmallIcon(R.drawable.ic_play)
+            .setContentIntent(contentIntent)
+            .setOngoing(true)
+            .addAction(R.drawable.ic_stop, "Stop", stopActionIntent)
+
+        return builder.build()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         player?.stop()
@@ -132,10 +157,12 @@ class AudioService : Service() {
     }
 
     companion object {
-
         private const val ACTION_PLAY_128 = "com.craiovadata.rfiplayer.action.PLAY"
         private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
         private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
+        private const val CHANNEL_ID = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
+        private const val NOTIFICATION_ID = 99
+        private const val REQUEST_CODE = 0
 
         fun startActionPlay128(context: Context) {
             val intent = Intent(context, AudioService::class.java)
