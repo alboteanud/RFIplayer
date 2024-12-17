@@ -3,31 +3,57 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:showIn="@layout/activity_main"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        tools:context=".MainActivity">
+        tools:context=".MainActivity"
+        tools:showIn="@layout/activity_main">
 
-    <ImageButton
+    <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    <Button
             android:id="@+id/buttonPlay128"
-            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:layout_marginTop="160dp"
-            android:minHeight="@dimen/min_btn_size"
+            android:layout_height="wrap_content"
             android:minWidth="@dimen/min_btn_size"
-            android:src="@drawable/ic_play"
+            android:minHeight="48dp"
             android:onClick="onClick"
-            android:contentDescription="play" />
+            android:text="RFI" />
+
+    <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5" />
+
+    <Button
+            android:id="@+id/buttonFranceInter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/min_btn_size"
+            android:minHeight="48dp"
+            android:onClick="onClick"
+            android:text="France Inter" />
+
+    <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
     <ImageButton
             android:id="@+id/buttonStop"
-            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:layout_marginTop="100dp"
-            android:minHeight="@dimen/min_btn_size"
-            android:minWidth="@dimen/min_btn_size"
+            android:layout_height="wrap_content"
+            android:minWidth="64dp"
+            android:minHeight="64dp"
             android:onClick="onClick"
-            android:src="@drawable/ic_stop"
-            android:contentDescription="stop" />
+            android:src="@drawable/ic_stop" />
+
+    <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
 
 </LinearLayout>

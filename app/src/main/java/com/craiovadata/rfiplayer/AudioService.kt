@@ -24,21 +24,26 @@ class AudioService : Service() {
     private var notifManager: PlayerNotificationManager? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_PLAY_128) {
-            if (player == null) {  player = ExoPlayer.Builder(this).build().apply {
+        if (intent?.action == ACTION_PLAY) {
+            player?.stop()
+            if (player == null) {
+                player = ExoPlayer.Builder(this).build().apply {
                     setAudioAttributes(
                         AudioAttributes.Builder()
                             .setUsage(C.USAGE_MEDIA)
                             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                             .build(), true
                     )
-                    setMediaItem(MediaItem.fromUri(Uri.parse(url_128)))
-                    playWhenReady = true
-                    prepare()
                     initNotifManager()
                 }
                 val notification = createNotification()
                 startForeground(NOTIFICATION_ID, notification)
+            }
+            player?.apply {
+                val url = intent.getStringExtra(URL_STRING)
+                setMediaItem(MediaItem.fromUri(Uri.parse(url)))
+                playWhenReady = true
+                prepare()
             }
         } else if (intent?.action == ACTION_STOP) {
             player?.stop()
@@ -157,16 +162,28 @@ class AudioService : Service() {
     }
 
     companion object {
-        private const val ACTION_PLAY_128 = "com.craiovadata.rfiplayer.action.PLAY"
+        private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
         private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
-        private val url_128 = "http://asculta.rfi.ro:9128/live.mp3"
+        private val url_rfi = "http://asculta.rfi.ro:9128/live.mp3"
+        private val url_france_inter = "http://icecast.radiofrance.fr/franceinter-hifi.aac"
+        // http://icecast.radiofrance.fr/franceinter-midfi.mp3
+
         private const val CHANNEL_ID = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
         private const val NOTIFICATION_ID = 99
         private const val REQUEST_CODE = 0
+        private const val URL_STRING = "url"
 
         fun startActionPlay128(context: Context) {
             val intent = Intent(context, AudioService::class.java)
-            intent.action = ACTION_PLAY_128
+            intent.action = ACTION_PLAY
+            intent.putExtra(URL_STRING, url_rfi)
+            context.startForegroundService(intent)
+        }
+
+        fun startActionPlayFranceInter(context: Context) {
+            val intent = Intent(context, AudioService::class.java)
+            intent.action = ACTION_PLAY
+            intent.putExtra(URL_STRING, url_france_inter)
             context.startForegroundService(intent)
         }
 

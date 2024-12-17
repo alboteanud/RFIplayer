@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlay128
+import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlayFranceInter
 import com.craiovadata.rfiplayer.AudioService.Companion.startActionStop
 
 class MainActivity : AppCompatActivity() {
@@ -28,6 +29,9 @@ class MainActivity : AppCompatActivity() {
         when (v.id) {
             R.id.buttonPlay128 -> {
                 startActionPlay128(this)
+            }
+            R.id.buttonFranceInter -> {
+                startActionPlayFranceInter(this)
             }
             R.id.buttonStop -> {
                 startActionStop(this)
