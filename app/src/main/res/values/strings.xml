@@ -1,11 +1,3 @@
 <resources>
-    <string name="app_name">RFI player</string>
-    <string name="notif_title">RFI</string>
-    <string name="notif_channel_name">My notification channel</string>
-    <string name="text_48_kbps">48 kbps</string>
-    <string name="text_128_kbps">128 kbps</string>
-    <string name="widget_logo">RFI</string>
-    <!-- Audio -->
-    <string name="playback_channel_name" translatable="false">Playback</string>
-    <string name="playback_channel_description" translatable="false">Playback background mode</string>
+    <string name="app_name">Radio player</string>
 </resources>

@@ -5,35 +5,29 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.audio.AudioAttributes
-import com.google.android.exoplayer2.ui.PlayerNotificationManager
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 
 class AudioService : Service() {
-
-    private var player: ExoPlayer? = null
-    private var notifManager: PlayerNotificationManager? = null
+    private var player: Player? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_PLAY) {
             if (player == null) {
-                initPlayer()
+                player = ExoPlayer.Builder(this).build()
+                startForeground(NOTIFICATION_ID, createNotification())
             } else {
                 player?.stop()
             }
             player?.apply {
                 val url = intent.getStringExtra(URL)
                 setMediaItem(MediaItem.fromUri(Uri.parse(url)))
-                playWhenReady = true
                 prepare()
+                play()
             }
         } else if (intent?.action == ACTION_STOP) {
             player?.stop()
@@ -42,95 +36,6 @@ class AudioService : Service() {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
         return START_STICKY
-    }
-
-    private fun initPlayer() {
-        player = ExoPlayer.Builder(this).build().apply {
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(C.USAGE_MEDIA)
-                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                    .build(), true
-            )
-            initNotifManager()
-        }
-        val notification = createNotification()
-        startForeground(NOTIFICATION_ID, notification)
-    }
-
-    private fun getMediaDescriptorAdapter(): PlayerNotificationManager.MediaDescriptionAdapter {
-        val mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter = object :
-            PlayerNotificationManager.MediaDescriptionAdapter {
-            override fun getCurrentContentTitle(player: Player): String {
-                return getString(R.string.notif_title)
-            }
-
-            override fun getCurrentContentText(player: Player) = getString(R.string.text_128_kbps)
-
-            override fun getCurrentLargeIcon(
-                player: Player,
-                callback: PlayerNotificationManager.BitmapCallback
-            ): Bitmap? {
-                return null
-            }
-
-            override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                return PendingIntent.getActivity(
-                    this@AudioService,
-                    REQUEST_CODE,
-                    Intent(this@AudioService, MainActivity::class.java),
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-            }
-        }
-        return mediaDescriptionAdapter
-    }
-
-    private fun initNotifManager() {
-        notifManager = PlayerNotificationManager.Builder(
-            this,
-            NOTIFICATION_ID,
-            CHANNEL_ID
-        )
-            .setChannelNameResourceId(R.string.playback_channel_name)
-            .setChannelDescriptionResourceId(R.string.playback_channel_description)
-            .setMediaDescriptionAdapter(getMediaDescriptorAdapter())
-            .setNotificationListener(getNotifListener())
-            .build()
-            .apply {
-                setUseNextAction(false)
-                setUsePreviousAction(false)
-                setUseFastForwardAction(false)
-//                setSmallIcon(R.mipmap.ic_launcher)
-                setPlayer(player)
-            }
-    }
-
-    private fun getNotifListener(): PlayerNotificationManager.NotificationListener {
-        val notificationListener: PlayerNotificationManager.NotificationListener =
-            object : PlayerNotificationManager.NotificationListener {
-                override fun onNotificationCancelled(
-                    notificationId: Int,
-                    dismissedByUser: Boolean
-                ) {
-                    stopSelf()
-                }
-
-                override fun onNotificationPosted(
-                    notificationId: Int,
-                    notification: Notification,
-                    ongoing: Boolean
-                ) {
-                    if (player != null) {
-                        startForeground(
-                            notificationId,
-                            notification,
-                            FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                        )
-                    }
-                }
-            }
-        return notificationListener
     }
 
     private fun createNotification(): Notification {
@@ -144,8 +49,8 @@ class AudioService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val builder: NotificationCompat.Builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("RFI Player")
-            .setContentText("Playing...")
+//            .setContentTitle("Radio Player")
+//            .setContentText("Playing...")
             .setSmallIcon(R.drawable.ic_play)
             .setContentIntent(contentIntent)
             .setOngoing(true)
@@ -171,7 +76,6 @@ class AudioService : Service() {
         private val url_rfi = "http://asculta.rfi.ro:9128/live.mp3"
         private val url_france_inter = "http://icecast.radiofrance.fr/franceinter-hifi.aac"
         // http://icecast.radiofrance.fr/franceinter-midfi.mp3
-
         private const val CHANNEL_ID = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
         private const val NOTIFICATION_ID = 99
         private const val REQUEST_CODE = 0
