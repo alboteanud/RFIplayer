@@ -8,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -19,6 +20,7 @@ class AudioService : Service() {
         if (intent?.action == ACTION_PLAY) {
             if (player == null) {
                 player = ExoPlayer.Builder(this).build()
+                player?.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true);
                 startForeground(NOTIFICATION_ID, createNotification())
             } else {
                 player?.stop()
