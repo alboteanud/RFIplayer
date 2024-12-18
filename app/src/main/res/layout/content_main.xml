@@ -15,12 +15,10 @@
 
     <Button
             android:id="@+id/buttonPlay128"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:minWidth="@dimen/min_btn_size"
-            android:minHeight="48dp"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="@dimen/button_height"
             android:onClick="onClick"
-            android:text="RFI" />
+            android:text="@string/rfi" />
 
     <Space
             android:layout_width="match_parent"
@@ -29,12 +27,10 @@
 
     <Button
             android:id="@+id/buttonFranceInter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:minWidth="@dimen/min_btn_size"
-            android:minHeight="48dp"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="@dimen/button_height"
             android:onClick="onClick"
-            android:text="France Inter" />
+            android:text="@string/inter" />
 
     <Space
             android:layout_width="match_parent"
@@ -43,11 +39,10 @@
 
     <ImageButton
             android:id="@+id/buttonStop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:minWidth="64dp"
-            android:minHeight="64dp"
+            android:layout_width="@dimen/button_height"
+            android:layout_height="@dimen/button_height"
             android:onClick="onClick"
+            android:contentDescription="@string/stop"
             android:src="@drawable/ic_stop" />
 
     <Space
