@@ -17,7 +17,6 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 
-
 class AudioService : Service() {
 
     private var player: ExoPlayer? = null
@@ -25,22 +24,13 @@ class AudioService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_PLAY) {
-            player?.stop()
             if (player == null) {
-                player = ExoPlayer.Builder(this).build().apply {
-                    setAudioAttributes(
-                        AudioAttributes.Builder()
-                            .setUsage(C.USAGE_MEDIA)
-                            .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                            .build(), true
-                    )
-                    initNotifManager()
-                }
-                val notification = createNotification()
-                startForeground(NOTIFICATION_ID, notification)
+                initPlayer()
+            } else {
+                player?.stop()
             }
             player?.apply {
-                val url = intent.getStringExtra(URL_STRING)
+                val url = intent.getStringExtra(URL)
                 setMediaItem(MediaItem.fromUri(Uri.parse(url)))
                 playWhenReady = true
                 prepare()
@@ -52,6 +42,20 @@ class AudioService : Service() {
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
         return START_STICKY
+    }
+
+    private fun initPlayer() {
+        player = ExoPlayer.Builder(this).build().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                    .build(), true
+            )
+            initNotifManager()
+        }
+        val notification = createNotification()
+        startForeground(NOTIFICATION_ID, notification)
     }
 
     private fun getMediaDescriptorAdapter(): PlayerNotificationManager.MediaDescriptionAdapter {
@@ -171,19 +175,19 @@ class AudioService : Service() {
         private const val CHANNEL_ID = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
         private const val NOTIFICATION_ID = 99
         private const val REQUEST_CODE = 0
-        private const val URL_STRING = "url"
+        private const val URL = "url"
 
         fun startActionPlay128(context: Context) {
             val intent = Intent(context, AudioService::class.java)
             intent.action = ACTION_PLAY
-            intent.putExtra(URL_STRING, url_rfi)
+            intent.putExtra(URL, url_rfi)
             context.startForegroundService(intent)
         }
 
         fun startActionPlayFranceInter(context: Context) {
             val intent = Intent(context, AudioService::class.java)
             intent.action = ACTION_PLAY
-            intent.putExtra(URL_STRING, url_france_inter)
+            intent.putExtra(URL, url_france_inter)
             context.startForegroundService(intent)
         }
 
