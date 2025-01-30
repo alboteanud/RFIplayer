@@ -51,8 +51,6 @@ class AudioService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val builder: NotificationCompat.Builder = NotificationCompat.Builder(this, CHANNEL_ID)
-//            .setContentTitle("Radio Player")
-//            .setContentText("Playing...")
             .setSmallIcon(R.drawable.ic_play)
             .setContentIntent(contentIntent)
             .setOngoing(true)
@@ -79,7 +77,6 @@ class AudioService : Service() {
         private val url_rfi = "http://asculta.rfi.ro:9128/live.mp3"
         private val url_france_inter = "http://icecast.radiofrance.fr/franceinter-midfi.mp3"
 //            "http://icecast.radiofrance.fr/franceinter-hifi.aac"
-
         private const val CHANNEL_ID = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
         private const val NOTIFICATION_ID = 99
         private const val REQUEST_CODE = 0
@@ -105,5 +102,4 @@ class AudioService : Service() {
             context.startService(intent)
         }
     }
-
 }
