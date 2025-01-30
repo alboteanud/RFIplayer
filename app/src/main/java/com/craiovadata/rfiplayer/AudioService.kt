@@ -65,19 +65,21 @@ class AudioService : Service() {
         super.onDestroy()
         player?.stop()
         player?.release()
+        player = null
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
-    override fun onBind(intent: Intent): IBinder {
-        TODO("Return the communication channel to the service.")
+    override fun onBind(p0: Intent?): IBinder? {
+        return null
     }
 
     companion object {
         private const val ACTION_PLAY = "com.craiovadata.rfiplayer.action.PLAY"
         private const val ACTION_STOP = "com.craiovadata.rfiplayer.action.STOP"
         private val url_rfi = "http://asculta.rfi.ro:9128/live.mp3"
-        private val url_france_inter = "http://icecast.radiofrance.fr/franceinter-hifi.aac"
-        // http://icecast.radiofrance.fr/franceinter-midfi.mp3
+        private val url_france_inter = "http://icecast.radiofrance.fr/franceinter-midfi.mp3"
+//            "http://icecast.radiofrance.fr/franceinter-hifi.aac"
+
         private const val CHANNEL_ID = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
         private const val NOTIFICATION_ID = 99
         private const val REQUEST_CODE = 0
