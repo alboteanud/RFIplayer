@@ -67,8 +67,15 @@ class AudioService : Service() {
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
+
+    private val binder = LocalBinder()
+    inner class LocalBinder : android.os.Binder() {
+        // Return this instance of LocalService so clients can call public methods
+        fun getService(): AudioService = this@AudioService
+    }
+
+    override fun onBind(intent: Intent): IBinder {
+        return binder
     }
 
     companion object {
