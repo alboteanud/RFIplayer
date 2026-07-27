@@ -19,27 +19,26 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(controllerFuture) {
-        val pc = controllerFuture.await()
-        controller = pc
-        
+        controller = controllerFuture.await()
+    }
+
+    DisposableEffect(controller) {
+        val player = controller ?: return@DisposableEffect onDispose {}
+
         fun syncState() {
-            isPlaying = pc.isPlaying
-            isLoading = pc.playbackState == Player.STATE_BUFFERING
-            
-            val metadata = pc.mediaMetadata
+            isPlaying = player.isPlaying
+            isLoading = player.playbackState == Player.STATE_BUFFERING
+
+            val metadata = player.mediaMetadata
             title = metadata.title?.toString() ?: metadata.displayTitle?.toString()
             subtitle = metadata.subtitle?.toString() ?: metadata.artist?.toString() ?: metadata.albumArtist?.toString()
 
-            // In STATE_IDLE (after stop), we want to clear the selection highlight
-            currentMediaUri = if (pc.playbackState == Player.STATE_IDLE) {
+            currentMediaUri = if (player.playbackState == Player.STATE_IDLE) {
                 null
             } else {
-                pc.currentMediaItem?.localConfiguration?.uri
+                player.currentMediaItem?.localConfiguration?.uri
             }
         }
-
-        // Initial sync
-        syncState()
 
         val listener = object : Player.Listener {
             override fun onEvents(player: Player, events: Player.Events) {
@@ -55,8 +54,13 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
                 if (playing) errorMessage = null
             }
         }
-        
-        pc.addListener(listener)
+
+        player.addListener(listener)
+        syncState()
+
+        onDispose {
+            player.removeListener(listener)
+        }
     }
 
     return remember(controller, isPlaying, isLoading, currentMediaUri, title, subtitle, errorMessage) {
