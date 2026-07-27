@@ -13,9 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.compose.material3.buttons.PlayPauseButton
 import com.craiovadata.rfiplayer.ui.theme.RFIplayerTheme
 
 class MainActivity : ComponentActivity() {
@@ -28,6 +32,7 @@ class MainActivity : ComponentActivity() {
         RadioStation(R.string.itzy_bitzy, "http://live.itsybitsy.ro:8000/itsybitsy")
     )
 
+    @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -49,6 +54,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+@UnstableApi
 @Composable
 fun MainScreen(
     stations: List<RadioStation>,
@@ -66,6 +72,16 @@ fun MainScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
+        },
+        bottomBar = {
+            if (playerState.currentMediaUri != null) {
+                val currentStation = stations.find { it.url == playerState.currentMediaUri.toString() }
+                NowPlayingBar(
+                    stationName = currentStation?.let { stringResource(it.nameResId) } ?: "Radio",
+                    playerState = playerState,
+                    onStop = onStop
+                )
+            }
         }
     ) { innerPadding ->
         Box(
@@ -81,8 +97,7 @@ fun MainScreen(
                 Spacer(modifier = Modifier.weight(1f))
 
                 stations.forEach { station ->
-                    val isSelected = playerState.isPlaying &&
-                            playerState.currentMediaUri?.toString() == station.url
+                    val isSelected = playerState.currentMediaUri?.toString() == station.url
                     StationButton(
                         text = stringResource(station.nameResId),
                         isSelected = isSelected,
@@ -90,23 +105,6 @@ fun MainScreen(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
-
-                FilledTonalIconButton(
-                    onClick = onStop,
-                    modifier = Modifier.size(75.dp),
-                    colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_stop),
-                        contentDescription = stringResource(R.string.stop),
-                        modifier = Modifier.fillMaxSize(0.6f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(0.5f))
 
                 // Error Message Area
                 playerState.errorMessage?.let { error ->
@@ -118,19 +116,62 @@ fun MainScreen(
                             .padding(horizontal = 24.dp)
                             .padding(bottom = 16.dp)
                     )
-                } ?: Spacer(modifier = Modifier.height(40.dp)) // Maintain layout height
+                } ?: Spacer(modifier = Modifier.height(40.dp))
 
                 Spacer(modifier = Modifier.weight(0.5f))
             }
+        }
+    }
+}
 
-            // Loading Indicator Overlay
-            if (playerState.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.secondary
+@UnstableApi
+@Composable
+fun NowPlayingBar(
+    stationName: String,
+    playerState: PlayerState,
+    onStop: () -> Unit
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 8.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "NOW PLAYING",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stationName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (playerState.player != null) {
+                    PlayPauseButton(
+                        player = playerState.player,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+                
+                Spacer(Modifier.width(8.dp))
+
+                IconButton(onClick = onStop) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_stop),
+                        contentDescription = "Stop",
+                        tint = MaterialTheme.colorScheme.error
                     )
                 }
             }
@@ -148,27 +189,22 @@ fun StationButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
         shape = MaterialTheme.shapes.medium,
         colors = if (isSelected) {
             ButtonDefaults.elevatedButtonColors(
-                containerColor = MaterialTheme.colorScheme.tertiary,
-                contentColor = MaterialTheme.colorScheme.onTertiary
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         } else {
             ButtonDefaults.elevatedButtonColors()
         }
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isSelected) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_play),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-            }
-            Text(text)
-        }
+        Text(
+            text = text,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
+@UnstableApi
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
@@ -180,7 +216,7 @@ fun MainScreenPreview() {
     RFIplayerTheme {
         MainScreen(
             previewStations,
-            PlayerState(true, true, null, "Error message example"),
+            PlayerState(null, true, false, null),
             {},
             {}
         )

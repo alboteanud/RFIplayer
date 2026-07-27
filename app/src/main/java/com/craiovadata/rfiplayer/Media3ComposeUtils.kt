@@ -10,6 +10,7 @@ import kotlinx.coroutines.guava.await
 
 @Composable
 fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): PlayerState {
+    var controller by remember { mutableStateOf<MediaController?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var currentMediaUri by remember { mutableStateOf<Uri?>(null) }
@@ -17,6 +18,7 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
 
     LaunchedEffect(controllerFuture) {
         val pc = controllerFuture.await()
+        controller = pc
         
         fun syncState() {
             isPlaying = pc.isPlaying
@@ -51,12 +53,13 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
         pc.addListener(listener)
     }
 
-    return remember(isPlaying, isLoading, currentMediaUri, errorMessage) {
-        PlayerState(isPlaying, isLoading, currentMediaUri, errorMessage)
+    return remember(controller, isPlaying, isLoading, currentMediaUri, errorMessage) {
+        PlayerState(controller, isPlaying, isLoading, currentMediaUri, errorMessage)
     }
 }
 
 data class PlayerState(
+    val player: Player?,
     val isPlaying: Boolean,
     val isLoading: Boolean,
     val currentMediaUri: Uri?,
