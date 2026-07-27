@@ -2,7 +2,6 @@ package com.craiovadata.rfiplayer
 
 import android.net.Uri
 import androidx.compose.runtime.*
-import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
@@ -18,26 +17,37 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
 
     LaunchedEffect(controllerFuture) {
         val pc = controllerFuture.await()
-        isPlaying = pc.isPlaying
-        isLoading = pc.playbackState == Player.STATE_BUFFERING
-        currentMediaUri = pc.currentMediaItem?.localConfiguration?.uri
         
+        fun syncState() {
+            isPlaying = pc.isPlaying
+            isLoading = pc.playbackState == Player.STATE_BUFFERING
+            
+            // In STATE_IDLE (after stop), we want to clear the selection highlight
+            currentMediaUri = if (pc.playbackState == Player.STATE_IDLE) {
+                null
+            } else {
+                pc.currentMediaItem?.localConfiguration?.uri
+            }
+        }
+
+        // Initial sync
+        syncState()
+
         val listener = object : Player.Listener {
-            override fun onIsPlayingChanged(playing: Boolean) {
-                isPlaying = playing
-                if (playing) errorMessage = null
+            override fun onEvents(player: Player, events: Player.Events) {
+                syncState()
             }
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                currentMediaUri = mediaItem?.localConfiguration?.uri
-            }
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                isLoading = playbackState == Player.STATE_BUFFERING
-            }
+
             override fun onPlayerError(error: PlaybackException) {
                 errorMessage = error.localizedMessage ?: "Playback error"
                 isLoading = false
             }
+
+            override fun onIsPlayingChanged(playing: Boolean) {
+                if (playing) errorMessage = null
+            }
         }
+        
         pc.addListener(listener)
     }
 
