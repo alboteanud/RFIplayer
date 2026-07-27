@@ -34,9 +34,11 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val playerState = rememberPlayerState(viewModel.controllerFuture)
             RFIplayerTheme {
                 MainScreen(
                     stations = stations,
+                    playerState = playerState,
                     onPlay = { url -> viewModel.play(url) },
                     onStop = { viewModel.stop() }
                 )
@@ -49,6 +51,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(
     stations: List<RadioStation>,
+    playerState: PlayerState,
     onPlay: (String) -> Unit,
     onStop: () -> Unit
 ) {
@@ -74,8 +77,11 @@ fun MainScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             stations.forEach { station ->
+                val isSelected = playerState.isPlaying && 
+                               playerState.currentMediaUri?.toString() == station.url
                 StationButton(
                     text = stringResource(station.nameResId),
+                    isSelected = isSelected,
                     onClick = { onPlay(station.url) }
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -102,16 +108,31 @@ fun MainScreen(
 }
 
 @Composable
-fun StationButton(text: String,  onClick: () -> Unit) {
+fun StationButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     ElevatedButton(
         onClick = onClick,
         modifier = Modifier
             .width(140.dp)
             .height(75.dp),
         shape = MaterialTheme.shapes.medium,
-        colors = ButtonDefaults.elevatedButtonColors()
+        colors = if (isSelected) {
+            ButtonDefaults.elevatedButtonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+        } else {
+            ButtonDefaults.elevatedButtonColors()
+        }
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isSelected) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_play),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+            }
             Text(text)
         }
     }
@@ -126,6 +147,11 @@ fun MainScreenPreview() {
         RadioStation(R.string.itzy_bitzy, "3")
     )
     RFIplayerTheme {
-        MainScreen(previewStations,  {}, {})
+        MainScreen(
+            previewStations, 
+            PlayerState(true, null), 
+            {}, 
+            {}
+        )
     }
 }

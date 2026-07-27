@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val controllerFuture = MediaController.Builder(
+    val controllerFuture = MediaController.Builder(
         application,
         SessionToken(application, ComponentName(application, AudioService::class.java))
     ).buildAsync()
