@@ -5,9 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlayRFI
-import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlayFranceInter
-import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlayItzyBitzy
+import com.craiovadata.rfiplayer.AudioService.Companion.startActionPlay
 import com.craiovadata.rfiplayer.AudioService.Companion.startActionStop
 
 class MainActivity : AppCompatActivity() {
@@ -23,13 +21,14 @@ class MainActivity : AppCompatActivity() {
     fun onClick(v: View) {
         when (v.id) {
             R.id.buttonPlayRfi -> {
-                startActionPlayRFI(this)
+                startActionPlay(this, "http://asculta.rfi.ro:9128/live.mp3")
             }
             R.id.buttonItzyBitzy -> {
-                startActionPlayItzyBitzy(this)
+                startActionPlay(this, "http://live.itsybitsy.ro:8000/itsybitsy")
             }
             R.id.buttonFranceInter -> {
-                startActionPlayFranceInter(this)
+                startActionPlay(this, "http://icecast.radiofrance.fr/franceinter-hifi.aac")
+                // "http://icecast.radiofrance.fr/franceinter-midfi.mp3" - data saver
             }
             R.id.buttonStop -> {
                 startActionStop(this)
