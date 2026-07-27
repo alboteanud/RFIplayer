@@ -1,31 +1,31 @@
 package com.craiovadata.rfiplayer
 
 import android.Manifest
-import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.MediaItem
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
 import com.craiovadata.rfiplayer.ui.theme.RFIplayerTheme
-import com.google.common.util.concurrent.ListenableFuture
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var controllerFuture: ListenableFuture<MediaController>
-    private val controller: MediaController?
-        get() = if (controllerFuture.isDone) controllerFuture.get() else null
+    private val viewModel: PlayerViewModel by viewModels()
+
+    private val stations = listOf(
+        RadioStation(R.string.rfi, "http://asculta.rfi.ro:9128/live.mp3"),
+        RadioStation(R.string.inter, "http://icecast.radiofrance.fr/franceinter-hifi.aac"),
+        RadioStation(R.string.itzy_bitzy, "http://live.itsybitsy.ro:8000/itsybitsy")
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,29 +36,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             RFIplayerTheme {
                 MainScreen(
-                    onPlay = { url -> playMedia(url) },
-                    onStop = { controller?.stop() }
+                    stations = stations,
+                    onPlay = { url -> viewModel.play(url) },
+                    onStop = { viewModel.stop() }
                 )
             }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        val sessionToken = SessionToken(this, ComponentName(this, AudioService::class.java))
-        controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        MediaController.releaseFuture(controllerFuture)
-    }
-
-    private fun playMedia(url: String) {
-        controller?.apply {
-            setMediaItem(MediaItem.fromUri(url))
-            prepare()
-            play()
         }
     }
 }
@@ -66,6 +48,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    stations: List<RadioStation>,
     onPlay: (String) -> Unit,
     onStop: () -> Unit
 ) {
@@ -89,27 +72,14 @@ fun MainScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            
-            StationButton(
-                text = stringResource(R.string.rfi),
-                onClick = { onPlay("http://asculta.rfi.ro:9128/live.mp3") }
-            )
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            StationButton(
-                text = stringResource(R.string.inter),
-                onClick = { onPlay("http://icecast.radiofrance.fr/franceinter-hifi.aac") }
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            StationButton(
-                text = stringResource(R.string.itzy_bitzy),
-                onClick = { onPlay("http://live.itsybitsy.ro:8000/itsybitsy") }
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
+            stations.forEach { station ->
+                StationButton(
+                    text = stringResource(station.nameResId),
+                    onClick = { onPlay(station.url) }
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
 
             FilledTonalIconButton(
                 onClick = onStop,
@@ -147,7 +117,12 @@ fun StationButton(text: String, onClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
+    val previewStations = listOf(
+        RadioStation(R.string.rfi, ""),
+        RadioStation(R.string.inter, ""),
+        RadioStation(R.string.itzy_bitzy, "")
+    )
     RFIplayerTheme {
-        MainScreen({}, {})
+        MainScreen(previewStations, {}, {})
     }
 }
