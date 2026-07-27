@@ -48,6 +48,7 @@ fun MainScreen(
     onStop: () -> Unit
 ) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
