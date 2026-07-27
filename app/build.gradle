@@ -41,6 +41,7 @@ dependencies {
     implementation libs.androidx.activity.compose
     implementation libs.androidx.activity.ktx
     implementation libs.androidx.lifecycle.viewmodel.ktx
+    implementation libs.kotlinx.coroutines.guava
     debugImplementation libs.androidx.ui.tooling
 
     implementation libs.androidx.media3.exoplayer

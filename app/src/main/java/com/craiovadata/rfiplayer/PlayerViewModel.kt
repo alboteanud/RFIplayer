@@ -2,61 +2,70 @@ package com.craiovadata.rfiplayer
 
 import android.app.Application
 import android.content.ComponentName
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.google.common.util.concurrent.ListenableFuture
-import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.guava.await
+import kotlinx.coroutines.launch
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
-    private var controllerFuture: ListenableFuture<MediaController>? = null
-    private val controller: MediaController?
-        get() = try {
-            if (controllerFuture?.isDone == true) controllerFuture?.get() else null
-        } catch (e: Exception) {
-            null
-        }
+    private val controllerFuture = MediaController.Builder(
+        application,
+        SessionToken(application, ComponentName(application, AudioService::class.java))
+    ).buildAsync()
 
-    private var pendingPlayUrl: String? = null
+    var isPlaying by mutableStateOf(false)
+        private set
+
+    var currentStationUrl by mutableStateOf<String?>(null)
+        private set
 
     init {
-        val sessionToken = SessionToken(
-            application,
-            ComponentName(application, AudioService::class.java)
-        )
-        val future = MediaController.Builder(application, sessionToken).buildAsync()
-        controllerFuture = future
-        
-        future.addListener({
-            pendingPlayUrl?.let { url ->
-                play(url)
-                pendingPlayUrl = null
-            }
-        }, MoreExecutors.directExecutor())
+        viewModelScope.launch {
+            val controller = controllerFuture.await()
+            controller.addListener(object : Player.Listener {
+                override fun onIsPlayingChanged(playing: Boolean) {
+                    isPlaying = playing
+                    if (!playing) {
+                        currentStationUrl = null
+                    }
+                }
+
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    currentStationUrl = mediaItem?.localConfiguration?.uri?.toString()
+                }
+            })
+            // Update initial state
+            isPlaying = controller.isPlaying
+            currentStationUrl = controller.currentMediaItem?.localConfiguration?.uri?.toString()
+        }
     }
 
     fun play(url: String) {
-        val currentController = controller
-        if (currentController != null) {
-            currentController.setMediaItem(MediaItem.fromUri(url))
-            currentController.prepare()
-            currentController.play()
-        } else {
-            pendingPlayUrl = url
+        viewModelScope.launch {
+            val controller = controllerFuture.await()
+            controller.setMediaItem(MediaItem.fromUri(url))
+            controller.prepare()
+            controller.play()
         }
     }
 
     fun stop() {
-        pendingPlayUrl = null
-        controller?.stop()
+        viewModelScope.launch {
+            val controller = controllerFuture.await()
+            controller.stop()
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
-        controllerFuture?.let {
-            MediaController.releaseFuture(it)
-        }
+        MediaController.releaseFuture(controllerFuture)
     }
 }
