@@ -14,6 +14,8 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
     var isPlaying by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var currentMediaUri by remember { mutableStateOf<Uri?>(null) }
+    var title by remember { mutableStateOf<String?>(null) }
+    var subtitle by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(controllerFuture) {
@@ -24,6 +26,10 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
             isPlaying = pc.isPlaying
             isLoading = pc.playbackState == Player.STATE_BUFFERING
             
+            val metadata = pc.mediaMetadata
+            title = metadata.title?.toString() ?: metadata.displayTitle?.toString()
+            subtitle = metadata.subtitle?.toString() ?: metadata.artist?.toString() ?: metadata.albumArtist?.toString()
+
             // In STATE_IDLE (after stop), we want to clear the selection highlight
             currentMediaUri = if (pc.playbackState == Player.STATE_IDLE) {
                 null
@@ -53,8 +59,8 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
         pc.addListener(listener)
     }
 
-    return remember(controller, isPlaying, isLoading, currentMediaUri, errorMessage) {
-        PlayerState(controller, isPlaying, isLoading, currentMediaUri, errorMessage)
+    return remember(controller, isPlaying, isLoading, currentMediaUri, title, subtitle, errorMessage) {
+        PlayerState(controller, isPlaying, isLoading, currentMediaUri, title, subtitle, errorMessage)
     }
 }
 
@@ -63,5 +69,7 @@ data class PlayerState(
     val isPlaying: Boolean,
     val isLoading: Boolean,
     val currentMediaUri: Uri?,
+    val title: String? = null,
+    val subtitle: String? = null,
     val errorMessage: String? = null
 )

@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,7 +46,7 @@ class MainActivity : ComponentActivity() {
                 MainScreen(
                     stations = stations,
                     playerState = playerState,
-                    onPlay = { url -> viewModel.play(url) },
+                    onPlay = { station -> viewModel.play(station) },
                     onStop = { viewModel.stop() }
                 )
             }
@@ -59,7 +60,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     stations: List<RadioStation>,
     playerState: PlayerState,
-    onPlay: (String) -> Unit,
+    onPlay: (RadioStation) -> Unit,
     onStop: () -> Unit
 ) {
     Scaffold(
@@ -75,9 +76,7 @@ fun MainScreen(
         },
         bottomBar = {
             if (playerState.currentMediaUri != null) {
-                val currentStation = stations.find { it.url == playerState.currentMediaUri.toString() }
                 NowPlayingBar(
-                    stationName = currentStation?.let { stringResource(it.nameResId) } ?: "Radio",
                     playerState = playerState,
                     onStop = onStop
                 )
@@ -101,7 +100,7 @@ fun MainScreen(
                     StationButton(
                         text = stringResource(station.nameResId),
                         isSelected = isSelected,
-                        onClick = { onPlay(station.url) }
+                        onClick = { onPlay(station) }
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -127,7 +126,6 @@ fun MainScreen(
 @UnstableApi
 @Composable
 fun NowPlayingBar(
-    stationName: String,
     playerState: PlayerState,
     onStop: () -> Unit
 ) {
@@ -138,40 +136,55 @@ fun NowPlayingBar(
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "NOW PLAYING",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = stationName,
+                    text = playerState.title ?: "Radio",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+                if (playerState.subtitle != null) {
+                    Text(
+                        text = playerState.subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                } else {
+                    Text(
+                        text = "Live Stream",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (playerState.player != null) {
                     PlayPauseButton(
                         player = playerState.player,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(56.dp) // Increased size
                     )
                 }
                 
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(12.dp))
 
-                IconButton(onClick = onStop) {
+                IconButton(
+                    onClick = onStop,
+                    modifier = Modifier.size(56.dp) // Larger stop button
+                ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_stop),
                         contentDescription = "Stop",
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(32.dp) // Larger icon
                     )
                 }
             }
@@ -184,7 +197,7 @@ fun StationButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     ElevatedButton(
         onClick = onClick,
         modifier = Modifier
-            .width(140.dp)
+            .width(160.dp) // Slightly wider
             .height(75.dp),
         shape = MaterialTheme.shapes.medium,
         colors = if (isSelected) {
@@ -216,7 +229,7 @@ fun MainScreenPreview() {
     RFIplayerTheme {
         MainScreen(
             previewStations,
-            PlayerState(null, true, false, null),
+            PlayerState(null, true, false, null, "RFI", "Live News"),
             {},
             {}
         )

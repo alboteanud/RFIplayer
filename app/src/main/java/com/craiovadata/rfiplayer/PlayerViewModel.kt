@@ -2,9 +2,11 @@ package com.craiovadata.rfiplayer
 
 import android.app.Application
 import android.content.ComponentName
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import kotlinx.coroutines.guava.await
@@ -17,10 +19,17 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         SessionToken(application, ComponentName(application, AudioService::class.java))
     ).buildAsync()
 
-    fun play(url: String) {
+    fun play(station: RadioStation) {
         viewModelScope.launch {
             val controller = controllerFuture.await()
-            controller.setMediaItem(MediaItem.fromUri(url))
+            val metadata = MediaMetadata.Builder()
+                .setTitle(getApplication<Application>().getString(station.nameResId))
+                .build()
+            val mediaItem = MediaItem.Builder()
+                .setUri(Uri.parse(station.url))
+                .setMediaMetadata(metadata)
+                .build()
+            controller.setMediaItem(mediaItem)
             controller.prepare()
             controller.play()
         }
