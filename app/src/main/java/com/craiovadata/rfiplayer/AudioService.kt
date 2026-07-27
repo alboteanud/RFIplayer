@@ -1,11 +1,14 @@
 package com.craiovadata.rfiplayer
 
 import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.AudioAttributes
@@ -15,6 +18,11 @@ import androidx.media3.exoplayer.ExoPlayer
 
 class AudioService : Service() {
     private var player: Player? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_PLAY) {
@@ -46,7 +54,7 @@ class AudioService : Service() {
             Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE
         )
         val stopActionIntent = PendingIntent.getService(
-            this, 0,
+            this, REQUEST_CODE,
             Intent(this, AudioService::class.java).setAction(ACTION_STOP),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -57,6 +65,18 @@ class AudioService : Service() {
             .addAction(R.drawable.ic_stop, "Stop", stopActionIntent)
 
         return builder.build()
+    }
+
+    private fun createNotificationChannel() {
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Radio Player Controls",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Controller for Radio Player"
+        }
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.createNotificationChannel(channel)
     }
 
     override fun onDestroy() {
@@ -86,7 +106,7 @@ class AudioService : Service() {
 //            "http://icecast.radiofrance.fr/franceinter-hifi.aac"
         private const val CHANNEL_ID = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
         private const val NOTIFICATION_ID = 99
-        private const val REQUEST_CODE = 0
+        private const val REQUEST_CODE = 9
         private const val URL = "url"
 
         fun startActionPlay128(context: Context) {
