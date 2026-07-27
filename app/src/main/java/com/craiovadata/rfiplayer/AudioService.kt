@@ -62,7 +62,6 @@ class AudioService : Service() {
             .setContentIntent(contentIntent)
             .setOngoing(true)
             .addAction(R.drawable.ic_stop, "STOP", stopActionIntent)
-
         return builder.build()
     }
 
