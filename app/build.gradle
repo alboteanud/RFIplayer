@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 
 android {
     compileSdk 37
@@ -23,6 +24,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    buildFeatures {
+        compose true
+    }
     namespace 'com.craiovadata.rfiplayer'
 }
 
@@ -31,6 +35,14 @@ dependencies {
     implementation libs.androidx.core.ktx
     implementation libs.androidx.constraintlayout
     implementation libs.material
+
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.ui
+    implementation libs.androidx.ui.graphics
+    implementation libs.androidx.ui.tooling.preview
+    implementation libs.androidx.material3
+    implementation libs.androidx.activity.compose
+    debugImplementation libs.androidx.ui.tooling
 
     implementation libs.androidx.media3.exoplayer
     implementation libs.androidx.media3.exoplayer.dash
