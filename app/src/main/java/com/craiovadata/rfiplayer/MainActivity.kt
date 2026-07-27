@@ -89,15 +89,18 @@ fun MainScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            IconButton(
+            FilledTonalIconButton(
                 onClick = onStop,
-                modifier = Modifier.size(75.dp)
+                modifier = Modifier.size(75.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_stop),
                     contentDescription = stringResource(R.string.stop),
-                    modifier = Modifier.fillMaxSize(),
-                    tint = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.fillMaxSize(0.6f)
                 )
             }
 
@@ -108,7 +111,7 @@ fun MainScreen(
 
 @Composable
 fun StationButton(text: String, onClick: () -> Unit) {
-    Button(
+    ElevatedButton(
         onClick = onClick,
         modifier = Modifier
             .width(140.dp)
