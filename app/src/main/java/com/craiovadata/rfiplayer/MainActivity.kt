@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.craiovadata.rfiplayer.ui.theme.RFIplayerTheme
@@ -67,42 +68,72 @@ fun MainScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(innerPadding)
         ) {
-            Spacer(modifier = Modifier.weight(1f))
-
-            stations.forEach { station ->
-                val isSelected = playerState.isPlaying && 
-                               playerState.currentMediaUri?.toString() == station.url
-                StationButton(
-                    text = stringResource(station.nameResId),
-                    isSelected = isSelected,
-                    onClick = { onPlay(station.url) }
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
-
-            FilledTonalIconButton(
-                onClick = onStop,
-                modifier = Modifier.size(75.dp),
-                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_stop),
-                    contentDescription = stringResource(R.string.stop),
-                    modifier = Modifier.fillMaxSize(0.6f)
-                )
+                Spacer(modifier = Modifier.weight(1f))
+
+                stations.forEach { station ->
+                    val isSelected = playerState.isPlaying &&
+                            playerState.currentMediaUri?.toString() == station.url
+                    StationButton(
+                        text = stringResource(station.nameResId),
+                        isSelected = isSelected,
+                        onClick = { onPlay(station.url) }
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                FilledTonalIconButton(
+                    onClick = onStop,
+                    modifier = Modifier.size(75.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_stop),
+                        contentDescription = stringResource(R.string.stop),
+                        modifier = Modifier.fillMaxSize(0.6f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(0.5f))
+
+                // Error Message Area
+                playerState.errorMessage?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(horizontal = 24.dp)
+                            .padding(bottom = 16.dp)
+                    )
+                } ?: Spacer(modifier = Modifier.height(40.dp)) // Maintain layout height
+
+                Spacer(modifier = Modifier.weight(0.5f))
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            // Loading Indicator Overlay
+            if (playerState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
         }
     }
 }
@@ -148,9 +179,9 @@ fun MainScreenPreview() {
     )
     RFIplayerTheme {
         MainScreen(
-            previewStations, 
-            PlayerState(true, null), 
-            {}, 
+            previewStations,
+            PlayerState(true, true, null, "Error message example"),
+            {},
             {}
         )
     }
