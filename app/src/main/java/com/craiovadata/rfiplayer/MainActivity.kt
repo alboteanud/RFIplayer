@@ -73,14 +73,14 @@ fun MainScreen(
                 onClick = onPlayRfi
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             StationButton(
                 text = stringResource(R.string.inter),
                 onClick = onPlayFranceInter
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             StationButton(
                 text = stringResource(R.string.itzy_bitzy),
