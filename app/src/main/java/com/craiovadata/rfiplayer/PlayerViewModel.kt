@@ -7,30 +7,49 @@ import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private val controller: MediaController?
-        get() = if (controllerFuture?.isDone == true) controllerFuture?.get() else null
+        get() = try {
+            if (controllerFuture?.isDone == true) controllerFuture?.get() else null
+        } catch (e: Exception) {
+            null
+        }
+
+    private var pendingPlayUrl: String? = null
 
     init {
         val sessionToken = SessionToken(
             application,
             ComponentName(application, AudioService::class.java)
         )
-        controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
+        val future = MediaController.Builder(application, sessionToken).buildAsync()
+        controllerFuture = future
+        
+        future.addListener({
+            pendingPlayUrl?.let { url ->
+                play(url)
+                pendingPlayUrl = null
+            }
+        }, MoreExecutors.directExecutor())
     }
 
     fun play(url: String) {
-        controller?.apply {
-            setMediaItem(MediaItem.fromUri(url))
-            prepare()
-            play()
+        val currentController = controller
+        if (currentController != null) {
+            currentController.setMediaItem(MediaItem.fromUri(url))
+            currentController.prepare()
+            currentController.play()
+        } else {
+            pendingPlayUrl = url
         }
     }
 
     fun stop() {
+        pendingPlayUrl = null
         controller?.stop()
     }
 
