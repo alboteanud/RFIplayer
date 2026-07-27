@@ -2,5 +2,6 @@
     <string name="app_name">Radio</string>
     <string name="rfi">RFI</string>
     <string name="inter">Inter</string>
+    <string name="itzy_bitzy">Itzy Bitzy</string>
     <string name="stop">Stop</string>
 </resources>

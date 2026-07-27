@@ -14,7 +14,7 @@
             android:layout_weight="1" />
 
     <Button
-            android:id="@+id/buttonPlay128"
+            android:id="@+id/buttonPlayRfi"
             android:layout_width="@dimen/button_width"
             android:layout_height="@dimen/button_height"
             android:onClick="onClick"
@@ -31,6 +31,17 @@
             android:layout_height="@dimen/button_height"
             android:onClick="onClick"
             android:text="@string/inter" />
+ <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5" />
+
+    <Button
+            android:id="@+id/buttonItzyBitzy"
+            android:layout_width="@dimen/button_width"
+            android:layout_height="@dimen/button_height"
+            android:onClick="onClick"
+            android:text="@string/itzy_bitzy" />
 
     <Space
             android:layout_width="match_parent"

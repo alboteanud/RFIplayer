@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.AudioAttributes
@@ -104,15 +103,23 @@ class AudioService : Service() {
         private val url_rfi = "http://asculta.rfi.ro:9128/live.mp3"
         private val url_france_inter = "http://icecast.radiofrance.fr/franceinter-midfi.mp3"
 //            "http://icecast.radiofrance.fr/franceinter-hifi.aac"
+        private val url_itsy_bitzy = "http://live.itsybitsy.ro:8000/itsybitsy"
         private const val CHANNEL_ID = "com.craiovadata.rfiplayer.notification.CHANNEL_ID"
         private const val NOTIFICATION_ID = 99
         private const val REQUEST_CODE = 9
         private const val URL = "url"
 
-        fun startActionPlay128(context: Context) {
+        fun startActionPlayRFI(context: Context) {
             val intent = Intent(context, AudioService::class.java)
             intent.action = ACTION_PLAY
             intent.putExtra(URL, url_rfi)
+            context.startForegroundService(intent)
+        }
+
+        fun startActionPlayItzyBitzy(context: Context) {
+            val intent = Intent(context, AudioService::class.java)
+            intent.action = ACTION_PLAY
+            intent.putExtra(URL, url_itsy_bitzy)
             context.startForegroundService(intent)
         }
 
