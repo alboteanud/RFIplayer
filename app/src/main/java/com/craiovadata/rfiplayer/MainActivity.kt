@@ -6,6 +6,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -64,14 +67,6 @@ fun MainScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        },
-        bottomBar = {
-            if (playerState.currentMediaUri != null) {
-                NowPlayingBar(
-                    playerState = playerState,
-                    onStop = onStop
-                )
-            }
         }
     ) { innerPadding ->
         Box(
@@ -80,7 +75,9 @@ fun MainScreen(
                 .padding(innerPadding)
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 100.dp), // Reserve space for NowPlayingBar
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -109,6 +106,31 @@ fun MainScreen(
                 } ?: Spacer(modifier = Modifier.height(40.dp))
 
                 Spacer(modifier = Modifier.weight(0.5f))
+            }
+
+            // Smart "Now Playing" Bar Overlay
+            AnimatedVisibility(
+                visible = playerState.currentMediaUri != null,
+                enter = slideInVertically { it },
+                exit = slideOutVertically { it },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                NowPlayingBar(
+                    playerState = playerState,
+                    onStop = onStop
+                )
+            }
+
+            // Loading Indicator Overlay
+            if (playerState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
         }
     }
