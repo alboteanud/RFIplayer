@@ -21,7 +21,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     val stations = listOf(
         RadioStation(R.string.rfi, "http://asculta.rfi.ro:9128/live.mp3"),
-        RadioStation(R.string.inter, "http://icecast.radiofrance.fr/franceinter-hifi.aac"),
+        RadioStation(R.string.inter, "http://icecast.radiofrance.fr/franceinter-midfi.mp3"),
+//        RadioStation(R.string.inter, "http://icecast.radiofrance.fr/franceinter-hifi.aac"),
         RadioStation(R.string.itzy_bitzy, "http://live.itsybitsy.ro:8000/itsybitsy")
     )
 

@@ -6,15 +6,28 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultLoadControl
 
+@UnstableApi
 class AudioService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
 
     override fun onCreate() {
         super.onCreate()
-        val player = ExoPlayer.Builder(this).build().apply {
-            setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
-        }
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                60_000,
+                180_000,
+                5_000,
+                10_000
+            )
+            .build()
+        val player = ExoPlayer.Builder(this)
+            .setLoadControl(loadControl)
+            .build().apply {
+                setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
+            }
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
