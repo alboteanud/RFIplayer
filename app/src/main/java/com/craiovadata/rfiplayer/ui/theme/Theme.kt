@@ -27,11 +27,11 @@ private val LightColorScheme = lightColorScheme(
     primary = RFIRed,
     secondary = RFIAccent,
     tertiary = RFIRedDark,
-    background = BackgroundDark,
-    surface = SurfaceDark,
+    background = BackgroundLight,
+    surface = SurfaceLight,
     onPrimary = Color.White,
-    onBackground = Color.White,
-    onSurface = Color.White
+    onBackground = Color.Black,
+    onSurface = Color.Black
 )
 
 @Composable
@@ -48,7 +48,7 @@ fun RFIplayerTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
         }
     }
 

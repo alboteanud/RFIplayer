@@ -2,7 +2,11 @@ package com.craiovadata.rfiplayer
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.util.Log
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -40,6 +44,31 @@ class AudioService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, player)
             .setSessionActivity(pendingIntent)
             .build()
+
+        player.addListener(object : Player.Listener {
+
+            override fun onPlaybackStateChanged(state: Int) {
+                Log.d("PLAYER", "state=$state")
+            }
+
+            override fun onPlayWhenReadyChanged(
+                playWhenReady: Boolean,
+                reason: Int
+            ) {
+                Log.d("PLAYER", "playWhenReady=$playWhenReady reason=$reason")
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                Log.e("PLAYER", "error", error)
+            }
+
+            override fun onMediaItemTransition(
+                mediaItem: MediaItem?,
+                reason: Int
+            ) {
+                Log.d("PLAYER", "transition")
+            }
+        })
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
