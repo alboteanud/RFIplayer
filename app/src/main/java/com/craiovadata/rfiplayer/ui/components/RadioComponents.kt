@@ -38,9 +38,9 @@ fun NowPlayingBar(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (playerState.subtitle != null) {
+                playerState.subtitle?.let { subtitle ->
                     Text(
-                        text = playerState.subtitle!!,
+                        text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
