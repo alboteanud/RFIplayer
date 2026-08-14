@@ -5,7 +5,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -13,13 +12,11 @@ import androidx.compose.ui.unit.sp
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.material3.buttons.PlayPauseButton
 import com.craiovadata.rfiplayer.PlayerState
-import com.craiovadata.rfiplayer.R
 
 @UnstableApi
 @Composable
 fun NowPlayingBar(
-    playerState: PlayerState,
-    onStop: () -> Unit
+    playerState: PlayerState
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -57,20 +54,6 @@ fun NowPlayingBar(
                     PlayPauseButton(
                         player = playerState.player,
                         modifier = Modifier.size(56.dp)
-                    )
-                }
-                
-                Spacer(Modifier.width(12.dp))
-
-                IconButton(
-                    onClick = onStop,
-                    modifier = Modifier.size(56.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_stop),
-                        contentDescription = "Stop",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(32.dp)
                     )
                 }
             }

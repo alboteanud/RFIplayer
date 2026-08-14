@@ -40,8 +40,7 @@ class MainActivity : ComponentActivity() {
                 MainScreen(
                     stations = viewModel.stations,
                     playerState = playerState,
-                    onPlay = { station -> viewModel.play(station) },
-                    onStop = { viewModel.stop() }
+                    onPlay = { station -> viewModel.play(station) }
                 )
             }
         }
@@ -54,8 +53,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     stations: List<RadioStation>,
     playerState: PlayerState,
-    onPlay: (RadioStation) -> Unit,
-    onStop: () -> Unit
+    onPlay: (RadioStation) -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -116,8 +114,7 @@ fun MainScreen(
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 NowPlayingBar(
-                    playerState = playerState,
-                    onStop = onStop
+                    playerState = playerState
                 )
             }
 
@@ -149,7 +146,6 @@ fun MainScreenPreview() {
         MainScreen(
             previewStations,
             PlayerState(null, true, false, null, "RFI", "Live News"),
-            {},
             {}
         )
     }

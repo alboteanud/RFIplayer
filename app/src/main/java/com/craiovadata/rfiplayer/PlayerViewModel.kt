@@ -42,11 +42,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun stop() {
-        viewModelScope.launch {
-            controllerFuture.await().stop()
-        }
-    }
 
     override fun onCleared() {
         super.onCleared()
