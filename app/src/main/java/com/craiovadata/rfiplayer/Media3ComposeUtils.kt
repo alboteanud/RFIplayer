@@ -30,8 +30,9 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
             isLoading = player.playbackState == Player.STATE_BUFFERING
 
             val metadata = player.mediaMetadata
-            title = metadata.title?.toString() ?: metadata.displayTitle?.toString()
-            subtitle = metadata.subtitle?.toString() ?: metadata.artist?.toString() ?: metadata.albumArtist?.toString()
+            val itemMetadata = player.currentMediaItem?.mediaMetadata
+            title = metadata.title?.toString() ?: metadata.displayTitle?.toString() ?: itemMetadata?.title?.toString() ?: itemMetadata?.displayTitle?.toString()
+            subtitle = metadata.subtitle?.toString() ?: metadata.artist?.toString() ?: metadata.albumArtist?.toString() ?: itemMetadata?.subtitle?.toString() ?: itemMetadata?.artist?.toString() ?: itemMetadata?.albumArtist?.toString()
 
             currentMediaUri = if (player.playbackState == Player.STATE_IDLE) {
                 null
@@ -42,7 +43,16 @@ fun rememberPlayerState(controllerFuture: ListenableFuture<MediaController>): Pl
 
         val listener = object : Player.Listener {
             override fun onEvents(player: Player, events: Player.Events) {
-                syncState()
+                if (events.containsAny(
+                        Player.EVENT_PLAYBACK_STATE_CHANGED,
+                        Player.EVENT_PLAY_WHEN_READY_CHANGED,
+                        Player.EVENT_MEDIA_ITEM_TRANSITION,
+                        Player.EVENT_IS_PLAYING_CHANGED,
+                        Player.EVENT_MEDIA_METADATA_CHANGED
+                    )
+                ) {
+                    syncState()
+                }
             }
 
             override fun onPlayerError(error: PlaybackException) {
