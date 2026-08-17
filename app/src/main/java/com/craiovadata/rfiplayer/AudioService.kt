@@ -19,19 +19,8 @@ class AudioService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(
-                60_000,
-                180_000,
-                5_000,
-                10_000
-            )
-            .build()
-        val player = ExoPlayer.Builder(this)
-            .setLoadControl(loadControl)
-            .build().apply {
-                setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
-            }
+        val player = ExoPlayer.Builder(this).build()
+        player.setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
@@ -44,31 +33,6 @@ class AudioService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, player)
             .setSessionActivity(pendingIntent)
             .build()
-
-        player.addListener(object : Player.Listener {
-
-            override fun onPlaybackStateChanged(state: Int) {
-                Log.d("PLAYER", "state=$state")
-            }
-
-            override fun onPlayWhenReadyChanged(
-                playWhenReady: Boolean,
-                reason: Int
-            ) {
-                Log.d("PLAYER", "playWhenReady=$playWhenReady reason=$reason")
-            }
-
-            override fun onPlayerError(error: PlaybackException) {
-                Log.e("PLAYER", "error", error)
-            }
-
-            override fun onMediaItemTransition(
-                mediaItem: MediaItem?,
-                reason: Int
-            ) {
-                Log.d("PLAYER", "transition")
-            }
-        })
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
