@@ -29,6 +29,9 @@ data class PlayerUiState(
 )
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
+    companion object {
+        private const val AUTOPLAY_INITIAL_VOLUME = 0.35f
+    }
 
     private val controllerFuture = MediaController.Builder(
         application,
@@ -123,17 +126,31 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun play(station: RadioStation) {
         viewModelScope.launch {
             val controller = controllerFuture.await()
-            val metadata = MediaMetadata.Builder()
-                .setTitle(getApplication<Application>().getString(station.nameResId))
-                .build()
-            val mediaItem = MediaItem.Builder()
-                .setUri(station.url.toUri())
-                .setMediaMetadata(metadata)
-                .build()
-            controller.setMediaItem(mediaItem)
-            controller.prepare()
-            controller.play()
+            playStation(controller, station)
         }
+    }
+
+    fun autoPlayDefaultStationIfIdle() {
+        viewModelScope.launch {
+            val controller = controllerFuture.await()
+            if (controller.mediaItemCount == 0 && controller.playbackState == Player.STATE_IDLE) {
+                controller.volume = AUTOPLAY_INITIAL_VOLUME
+                playStation(controller, stations.first())
+            }
+        }
+    }
+
+    private fun playStation(controller: MediaController, station: RadioStation) {
+        val metadata = MediaMetadata.Builder()
+            .setTitle(getApplication<Application>().getString(station.nameResId))
+            .build()
+        val mediaItem = MediaItem.Builder()
+            .setUri(station.url.toUri())
+            .setMediaMetadata(metadata)
+            .build()
+        controller.setMediaItem(mediaItem)
+        controller.prepare()
+        controller.play()
     }
 
     fun togglePlayPause() {
