@@ -143,7 +143,10 @@ fun StationButton(
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         } else {
-            ButtonDefaults.elevatedButtonColors()
+            ButtonDefaults.elevatedButtonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
         },
     ) {
         Row(
