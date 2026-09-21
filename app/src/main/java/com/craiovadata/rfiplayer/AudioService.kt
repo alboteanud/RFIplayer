@@ -22,19 +22,10 @@ class AudioService : MediaSessionService() {
             .setUsage(C.USAGE_MEDIA)
             .build()
 
-        val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(
-                40_000,
-                80_000,
-                5_000,
-                10_000
-            ).build()
-
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(audioAttributes, /* handleAudioFocus= */ true)
             .setHandleAudioBecomingNoisy(true)
             .setWakeMode(C.WAKE_MODE_NETWORK)
-            .setLoadControl(loadControl)
             .build()
 
         val intent = Intent(this, MainActivity::class.java).apply {
