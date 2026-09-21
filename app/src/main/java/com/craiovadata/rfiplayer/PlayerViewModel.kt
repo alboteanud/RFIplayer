@@ -49,6 +49,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         RadioStation(R.string.itzy_bitzy, "http://live.itsybitsy.ro:8000/itsybitsy"),
     )
 
+    // RFI
+    // 64 kbps http://asculta.rfi.ro:9128/live.aac
+    // 128 kbps http://asculta.rfi.ro:9128/live.mp3
+
+    // France Inter
+    // 32 kbps http://icecast.radiofrance.fr/franceinter-lofi.mp3
+    // 64 kbps http://icecast.radiofrance.fr/franceinter-midfi.mp3
+    // 128+ kbps http://icecast.radiofrance.fr/franceinter-hifi.mp3
+
     private val playerListener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             if (events.containsAny(
