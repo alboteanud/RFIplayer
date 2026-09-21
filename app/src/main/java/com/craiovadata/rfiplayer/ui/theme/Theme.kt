@@ -50,7 +50,6 @@ fun RFIplayerTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = androidx.compose.material3.Typography(),
         content = content,
     )
 }

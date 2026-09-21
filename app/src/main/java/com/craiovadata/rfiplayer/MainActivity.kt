@@ -56,7 +56,11 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission(),
-            ) { /* permission result handled by system */ }
+            ) { isGranted ->
+                if (!isGranted) {
+                    viewModel.setErrorMessage("Notification permission denied. Notifications won't be shown.")
+                }
+            }
 
             LaunchedEffect(Unit) {
                 if (ContextCompat.checkSelfPermission(

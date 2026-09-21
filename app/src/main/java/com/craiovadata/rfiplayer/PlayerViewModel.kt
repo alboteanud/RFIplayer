@@ -181,6 +181,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun setErrorMessage(message: String) {
+        _uiState.update { it.copy(errorMessage = message) }
+    }
+
     override fun onCleared() {
         super.onCleared()
         activeController?.removeListener(playerListener)
