@@ -45,7 +45,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     val stations = listOf(
         RadioStation(R.string.rfi, "http://asculta.rfi.ro:9128/live.aac"),
-        RadioStation(R.string.inter, "http://icecast.radiofrance.fr/franceinter-midfi.mp3"),
+        RadioStation(R.string.inter, "https://icecast.radiofrance.fr/franceinter-midfi.mp3"),
         RadioStation(R.string.itzy_bitzy, "http://live.itsybitsy.ro:8000/itsybitsy"),
     )
 
@@ -54,9 +54,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     // 128 kbps http://asculta.rfi.ro:9128/live.mp3
 
     // France Inter
-    // 32 kbps http://icecast.radiofrance.fr/franceinter-lofi.mp3
-    // 64 kbps http://icecast.radiofrance.fr/franceinter-midfi.mp3
-    // 128+ kbps http://icecast.radiofrance.fr/franceinter-hifi.mp3
+    // 32 kbps https://icecast.radiofrance.fr/franceinter-lofi.mp3
+    // 128 kbps https://icecast.radiofrance.fr/franceinter-midfi.mp3
+    // 192 kbps https://icecast.radiofrance.fr/franceinter-hifi.aac
 
     private val playerListener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
