@@ -39,7 +39,7 @@ fun NowPlayingBar(
 ) {
     Surface(
         color = MaterialTheme.colorScheme.background,
-        tonalElevation = 8.dp,
+        tonalElevation = 0.dp,
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(
