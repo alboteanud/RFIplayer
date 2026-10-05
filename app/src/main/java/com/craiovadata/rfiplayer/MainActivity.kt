@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.craiovadata.rfiplayer.ui.components.NowPlayingBar
 import com.craiovadata.rfiplayer.ui.components.StationButton
-import com.craiovadata.rfiplayer.ui.theme.RFIplayerTheme
+import com.craiovadata.rfiplayer.ui.theme.RadioPlayerTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
 
             val playerState by viewModel.uiState.collectAsState()
 
-            RFIplayerTheme {
+            RadioPlayerTheme {
                 MainScreen(
                     stations = viewModel.stations,
                     playerState = playerState,
@@ -172,7 +172,7 @@ fun MainScreenPreview() {
         RadioStation(R.string.inter, "3"),
         RadioStation(R.string.itzy_bitzy, "4"),
     )
-    RFIplayerTheme {
+    RadioPlayerTheme {
         MainScreen(
             stations = previewStations,
             playerState = PlayerUiState(

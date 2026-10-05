@@ -5,26 +5,26 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
 private val DarkColorScheme = darkColorScheme(
-    primary = RFIWhite,
-    onPrimary = RFIBlack,
-    primaryContainer = RFIWhite,
-    onPrimaryContainer = RFIBlack,
-    secondary = RFIWhite,
-    secondaryContainer = RFISoftBlack,
-    onSecondaryContainer = RFIWhite,
-    tertiary = RFIWhite,
-    background = RFIBlack,
-    surface = RFIBlack,
-    onBackground = RFIWhite,
-    onSurface = RFIWhite,
-    surfaceVariant = RFISoftBlack,
-    onSurfaceVariant = RFIWhite,
-    error = RFIWhite,
-    onError = RFIBlack,
+    primary = AppWhite,
+    onPrimary = AppBlack,
+    primaryContainer = AppWhite,
+    onPrimaryContainer = AppBlack,
+    secondary = AppWhite,
+    secondaryContainer = AppSoftBlack,
+    onSecondaryContainer = AppWhite,
+    tertiary = AppWhite,
+    background = AppBlack,
+    surface = AppBlack,
+    onBackground = AppWhite,
+    onSurface = AppWhite,
+    surfaceVariant = AppSoftBlack,
+    onSurfaceVariant = AppWhite,
+    error = AppWhite,
+    onError = AppBlack,
 )
 
 @Composable
-fun RFIplayerTheme(content: @Composable () -> Unit) {
+fun RadioPlayerTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = DarkColorScheme,
         content = content,
