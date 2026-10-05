@@ -11,6 +11,13 @@
 
 ---
 
+## Radio România Actualități
+| Quality | URL |
+|---------|-----|
+| Live stream | `http://stream2.srr.ro:8002/stream/1/` |
+
+---
+
 ## France Inter
 | Quality | Bitrate | URL | Consum/oră |
 |---------|---------|-----|-----------|

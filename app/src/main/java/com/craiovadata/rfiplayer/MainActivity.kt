@@ -125,7 +125,7 @@ fun MainScreen(
                 stations.forEach { station ->
                     val isSelected = playerState.currentMediaUri?.toString() == station.url
                     StationButton(
-                        text = stringResource(station.nameResId),
+                        text = stringResource(station.buttonTextResId),
                         isSelected = isSelected,
                         isPlaying = isSelected && playerState.isPlaying,
                         isLoading = isSelected && playerState.isLoading,
@@ -167,8 +167,9 @@ fun MainScreen(
 fun MainScreenPreview() {
     val previewStations = listOf(
         RadioStation(R.string.rfi, "1"),
-        RadioStation(R.string.inter, "2"),
-        RadioStation(R.string.itzy_bitzy, "3"),
+        RadioStation(R.string.radio_romania_actualitati, "2"),
+        RadioStation(R.string.inter, "3"),
+        RadioStation(R.string.itzy_bitzy, "4"),
     )
     RFIplayerTheme {
         MainScreen(
