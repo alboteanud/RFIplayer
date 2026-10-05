@@ -80,7 +80,6 @@ class MainActivity : ComponentActivity() {
                     playerState = playerState,
                     onPlay = { station -> viewModel.play(station) },
                     onPlayPause = { viewModel.togglePlayPause() },
-                    onStop = { viewModel.stop() }
                 )
             }
         }
@@ -94,7 +93,6 @@ fun MainScreen(
     playerState: PlayerUiState,
     onPlay: (RadioStation) -> Unit,
     onPlayPause: () -> Unit,
-    onStop: () -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -155,7 +153,6 @@ fun MainScreen(
                 NowPlayingBar(
                     playerState = playerState,
                     onPlayPauseClick = onPlayPause,
-                    onStopClick = onStop,
                 )
             }
         }
@@ -183,7 +180,6 @@ fun MainScreenPreview() {
             ),
             onPlay = {},
             onPlayPause = {},
-            onStop = {},
         )
     }
 }

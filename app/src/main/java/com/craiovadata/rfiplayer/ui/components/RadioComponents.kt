@@ -14,7 +14,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -36,86 +35,45 @@ import com.craiovadata.rfiplayer.R
 fun NowPlayingBar(
     playerState: PlayerUiState,
     onPlayPauseClick: () -> Unit,
-    onStopClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.background,
         tonalElevation = 8.dp,
         modifier = modifier.fillMaxWidth(),
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = playerState.title ?: stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                playerState.subtitle?.let { subtitle ->
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            // Play / Pause Button
+            FilledIconButton(
+                onClick = onPlayPauseClick,
+                modifier = Modifier.size(64.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
             ) {
-                // Play / Pause Button
-                FilledIconButton(
-                    onClick = onPlayPauseClick,
-                    modifier = Modifier.size(48.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    if (playerState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.5.dp,
-                        )
-                    } else if (playerState.isPlaying) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_pause),
-                            contentDescription = stringResource(R.string.pause),
-                            modifier = Modifier.size(24.dp),
-                        )
-                    } else {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_play),
-                            contentDescription = stringResource(R.string.play),
-                            modifier = Modifier.size(24.dp),
-                        )
-                    }
-                }
-
-                // Stop Button
-                IconButton(
-                    onClick = onStopClick,
-                    modifier = Modifier.size(44.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    ),
-                ) {
+                if (playerState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.5.dp,
+                    )
+                } else if (playerState.isPlaying) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_stop),
-                        contentDescription = stringResource(R.string.stop),
-                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(R.drawable.ic_pause),
+                        contentDescription = stringResource(R.string.pause),
+                        modifier = Modifier.size(32.dp),
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_play),
+                        contentDescription = stringResource(R.string.play),
+                        modifier = Modifier.size(32.dp),
                     )
                 }
             }
