@@ -147,7 +147,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun autoPlayDefaultStationIfIdle() {
         viewModelScope.launch {
             val controller = controllerFuture.await()
-            if (controller.mediaItemCount == 0 && controller.playbackState == Player.STATE_IDLE) {
+            val playbackInProgress = controller.isPlaying ||
+                (controller.playWhenReady &&
+                    (controller.playbackState == Player.STATE_BUFFERING ||
+                        controller.playbackState == Player.STATE_READY))
+            if (!playbackInProgress) {
                 controller.volume = AUTOPLAY_INITIAL_VOLUME
                 playStation(controller, stations.first())
             }

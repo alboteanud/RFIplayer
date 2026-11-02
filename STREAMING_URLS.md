@@ -48,6 +48,7 @@
 ---
 
 ## Notes
+- La pornirea aplicației sau revenirea în prim-plan, RFI pornește la 35% din volumul playerului dacă redarea este inactivă. Redarea deja activă sau în așteptare (buffering sau focus audio) este păstrată.
 - Toate URL-urile sunt testate și active
 - Format-urile AAC sunt mai economice decât MP3 la aceeași calitate
 - RFI și France Inter suportă streaming live 24/7

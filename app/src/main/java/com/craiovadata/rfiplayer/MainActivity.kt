@@ -52,10 +52,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
         )
-        if (savedInstanceState == null) {
-            viewModel.autoPlayDefaultStationIfIdle()
-        }
-
         setContent {
             val context = LocalContext.current
             val permissionLauncher = rememberLauncherForActivityResult(
@@ -87,6 +83,11 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.autoPlayDefaultStationIfIdle()
     }
 }
 
