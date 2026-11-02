@@ -180,8 +180,6 @@ fun MainScreenPreview() {
                 isPlaying = true,
                 isLoading = false,
                 currentMediaUri = null,
-                title = "RFI Romania",
-                subtitle = "Live Stream",
             ),
             onPlay = {},
             onPlayPause = {},

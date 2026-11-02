@@ -23,14 +23,13 @@ data class PlayerUiState(
     val isPlaying: Boolean = false,
     val isLoading: Boolean = false,
     val currentMediaUri: Uri? = null,
-    val title: String? = null,
-    val subtitle: String? = null,
     val errorMessage: String? = null,
 )
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val AUTOPLAY_INITIAL_VOLUME = 0.35f
+        private const val DEFAULT_VOLUME = 1.0f
     }
 
     private val controllerFuture = MediaController.Builder(
@@ -70,7 +69,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                     Player.EVENT_PLAY_WHEN_READY_CHANGED,
                     Player.EVENT_MEDIA_ITEM_TRANSITION,
                     Player.EVENT_IS_PLAYING_CHANGED,
-                    Player.EVENT_MEDIA_METADATA_CHANGED,
                 )
             ) {
                 syncState(player)
@@ -107,19 +105,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun syncState(player: Player) {
-        val metadata = player.mediaMetadata
-        val itemMetadata = player.currentMediaItem?.mediaMetadata
-        val title = metadata.title?.toString()
-            ?: metadata.displayTitle?.toString()
-            ?: itemMetadata?.title?.toString()
-            ?: itemMetadata?.displayTitle?.toString()
-        val subtitle = metadata.subtitle?.toString()
-            ?: metadata.artist?.toString()
-            ?: metadata.albumArtist?.toString()
-            ?: itemMetadata?.subtitle?.toString()
-            ?: itemMetadata?.artist?.toString()
-            ?: itemMetadata?.albumArtist?.toString()
-
         val currentMediaUri = if (player.playbackState == Player.STATE_IDLE) {
             null
         } else {
@@ -131,8 +116,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 isPlaying = player.isPlaying,
                 isLoading = player.playbackState == Player.STATE_BUFFERING,
                 currentMediaUri = currentMediaUri,
-                title = title,
-                subtitle = subtitle,
             )
         }
     }
@@ -140,6 +123,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun play(station: RadioStation) {
         viewModelScope.launch {
             val controller = controllerFuture.await()
+            controller.volume = DEFAULT_VOLUME
             playStation(controller, station)
         }
     }
@@ -147,11 +131,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun autoPlayDefaultStationIfIdle() {
         viewModelScope.launch {
             val controller = controllerFuture.await()
-            val playbackInProgress = controller.isPlaying ||
-                (controller.playWhenReady &&
-                    (controller.playbackState == Player.STATE_BUFFERING ||
-                        controller.playbackState == Player.STATE_READY))
-            if (!playbackInProgress) {
+            val isIdle = controller.mediaItemCount == 0 ||
+                controller.playbackState == Player.STATE_IDLE ||
+                controller.playbackState == Player.STATE_ENDED
+            if (isIdle) {
                 controller.volume = AUTOPLAY_INITIAL_VOLUME
                 playStation(controller, stations.first())
             }
@@ -179,14 +162,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             } else {
                 controller.play()
             }
-        }
-    }
-
-    fun stop() {
-        viewModelScope.launch {
-            val controller = controllerFuture.await()
-            controller.stop()
-            controller.clearMediaItems()
         }
     }
 
